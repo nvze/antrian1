@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e1a">
+<title>OR Calculator · Dark Edition</title>
+<style>
+/* ============================================================
+   RESET & VARIABEL
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-0: #0a0e1a;
+  --bg-1: #0f1424;
+  --bg-2: #161b2e;
+  --bg-3: #1e2440;
+  --border: rgba(139, 92, 246, 0.15);
+  --border-hover: rgba(139, 92, 246, 0.4);
+  --text-1: #e8eaf6;
+  --text-2: #a8b0c9;
+  --text-3: #6b7391;
+  --violet: #8b5cf6;
+  --violet-light: #a78bfa;
+  --cyan: #22d3ee;
+  --cyan-light: #67e8f9;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --pink: #ec4899;
+  --gradient: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+  --gradient-soft: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(34,211,238,0.15) 100%);
+  --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.15);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-0);
+  color: var(--text-1);
+  line-height: 1.65;
+  min-height: 100vh;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Background orbs (CSS only, ringan) */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+}
+body::before {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #8b5cf6, transparent 70%);
+  top: -200px; left: -200px;
+}
+body::after {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, #22d3ee, transparent 70%);
+  bottom: -300px; right: -250px;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.hero {
+  text-align: center;
+  padding: 30px 10px 24px;
+  margin-bottom: 10px;
+}
+.hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--gradient);
+  font-size: 26px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.hero h1 {
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 60%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+.hero p {
+  color: var(--text-2);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   NAVIGASI LIST MENU
+   ============================================================ */
+.nav-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.nav-item {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text-1);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-soft);
+  opacity: 0;
+  transition: opacity var(--transition);
+  z-index: 0;
+}
+
+.nav-item:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.12);
+}
+.nav-item:hover::before { opacity: 1; }
+
+.nav-item.active {
+  background: var(--bg-3);
+  border-color: var(--violet);
+  box-shadow: 0 0 0 1px var(--violet), 0 8px 32px rgba(139, 92, 246, 0.25);
+}
+.nav-item.active::before { opacity: 1; }
+
+.nav-item > * { position: relative; z-index: 1; }
+
+.nav-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.12);
+  transition: all var(--transition);
+}
+.nav-item.active .nav-icon {
+  background: var(--gradient);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+}
+
+.nav-text {
+  flex: 1;
+  min-width: 0;
+}
+.nav-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-item.active .nav-title { color: var(--violet-light); }
+
+/* ============================================================
+   KONTEN MATERI
+   ============================================================ */
+.materi-wrap {
+  position: relative;
+}
+
+.materi {
+  display: none;
+  animation: fadeSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.materi.active { display: block; }
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   CARD / GLASS
+   ============================================================ */
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-glow);
+  backdrop-filter: blur(10px);
+}
+.card-glass {
+  background: rgba(22, 27, 46, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.card h2 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-1);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+.card h2::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: var(--gradient);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.card h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--violet-light);
+  margin: 18px 0 10px;
+  letter-spacing: -0.01em;
+}
+
+.card p { margin-bottom: 10px; font-size: 0.88rem; color: var(--text-2); }
+.card ul, .card ol { margin: 8px 0 12px 20px; font-size: 0.86rem; color: var(--text-2); }
+.card li { margin-bottom: 5px; }
+.card b { color: var(--text-1); font-weight: 700; }
+
+/* ============================================================
+   ESAI / ANALOGI / INFO BOX
+   ============================================================ */
+.esai-box {
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  font-size: 0.87rem;
+  text-align: justify;
+  color: var(--text-2);
+}
+.esai-box p { color: var(--text-2); }
+
+.analogy {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--amber);
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin: 12px 0;
+  font-style: italic;
+  font-size: 0.86rem;
+  color: #fcd34d;
+}
+
+.info-box {
+  background: rgba(34, 211, 238, 0.08);
+  border-left: 3px solid var(--cyan);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: var(--cyan-light);
+}
+.success-box {
+  background: rgba(16, 185, 129, 0.08);
+  border-left: 3px solid var(--green);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #6ee7b7;
+}
+.warning-box {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--amber);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #fcd34d;
+}
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid var(--red);
+  padding: 12px;
+  border-radius: 8px;
+  color: #fca5a5;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* ============================================================
+   ACCORDION
+   ============================================================ */
+.accordion {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: all var(--transition);
+}
+.accordion:hover { border-color: var(--border-hover); }
+
+.accordion-header {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--violet-light);
+  font-size: 0.86rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  gap: 10px;
+}
+.accordion-header::after {
+  content: '▼';
+  font-size: 0.6rem;
+  transition: transform var(--transition);
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+.accordion.open .accordion-header::after { transform: rotate(180deg); }
+
+.accordion-body {
+  display: none;
+  padding: 0 14px 14px;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  line-height: 1.7;
+  text-align: justify;
+}
+.accordion.open .accordion-body { display: block; }
+
+/* ============================================================
+   FORM
+   ============================================================ */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  letter-spacing: 0.01em;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  font-family: inherit;
+  color: var(--text-1);
+  transition: all var(--transition);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  background: var(--bg-1);
+}
+input::placeholder { color: var(--text-3); }
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8b0c9' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 18px;
+  padding-right: 36px;
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (max-width: 640px) {
+  .grid2, .grid3 { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* ============================================================
+   BUTTON
+   ============================================================ */
+.btn {
+  background: var(--gradient);
+  color: white;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: all var(--transition);
+  font-family: inherit;
+  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
+}
+.btn:active { transform: translateY(0); }
+
+.btn-sec {
+  background: var(--bg-3);
+  color: var(--violet-light);
+  border: 1px solid var(--border-hover);
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  width: auto;
+  margin-right: 6px;
+  box-shadow: none;
+}
+.btn-sec:hover {
+  background: rgba(139, 92, 246, 0.15);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
+}
+
+.btn-sm {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--violet-light);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  width: auto;
+  margin: 0;
+  box-shadow: none;
+  font-weight: 600;
+}
+.btn-sm:hover { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239,68,68,0.3); transform: none; }
+
+/* ============================================================
+   RESULT METRICS
+   ============================================================ */
+.result { display: none; }
+.result.show {
+  display: block;
+  animation: fadeSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.metric {
+  background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.05));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition);
+}
+.metric::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--gradient);
+}
+.metric:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+.metric .label {
+  font-size: 0.68rem;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.metric .value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+th, td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--bg-3);
+  color: var(--violet-light);
+  font-weight: 700;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+td { color: var(--text-2); }
+tr:last-child td { border-bottom: none; }
+td.highlight {
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  font-weight: 700;
+}
+tr.critical-row td {
+  background: rgba(239, 68, 68, 0.08);
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+/* ============================================================
+   BADGE / FORMULA / HINT
+   ============================================================ */
+.badge {
+  display: inline-block;
+  background: var(--gradient);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.formula {
+  background: #05070e;
+  color: var(--cyan-light);
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  margin: 10px 0;
+  overflow-x: auto;
+  text-align: center;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  letter-spacing: 0.01em;
+  line-height: 1.8;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+/* ============================================================
+   MATRIX INPUT
+   ============================================================ */
+.matrix-input { display: grid; gap: 5px; margin-bottom: 10px; }
+.matrix-input input {
+  margin-bottom: 0;
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 0.82rem;
+}
+.row-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--violet-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   ACTIVITY CARD (CPM/PERT)
+   ============================================================ */
+.activity-card {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: all var(--transition);
+}
+.activity-card:hover { border-color: var(--border-hover); }
+.activity-card .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.activity-card .header b {
+  color: var(--violet-light);
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   DETAIL LIST
+   ============================================================ */
+.detail-list { list-style: none; }
+.detail-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+.detail-list li:last-child { border-bottom: none; }
+.detail-list b {
+  color: var(--cyan-light);
+  text-align: right;
+  font-weight: 700;
+}
+
+/* ============================================================
+   STEPS LIST
+   ============================================================ */
+.steps-list { font-size: 0.82rem; padding-left: 20px; }
+.steps-list li { margin-bottom: 8px; color: var(--text-2); }
+.steps-list b { color: var(--violet-light); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.78rem;
+  padding: 30px 10px 10px;
+  line-height: 1.8;
+}
+.footer .gradient-text {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-0); }
+::-webkit-scrollbar-thumb {
+  background: var(--bg-3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+
+/* ============================================================
+   ANIMATION UTIL
+   ============================================================ */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.6); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="hero-icon">🧠</div>
+    <h1>Operation Research Calculator</h1>
+    <p>Antrean · Transportasi · Penugasan · CPM · PERT</p>
+  </header>
+
+  <!-- ============ NAV LIST ============ -->
+  <nav class="nav-list">
+    <button class="nav-item active" onclick="showMateri('queue', this)">
+      <span class="nav-icon">🎯</span>
+      <div class="nav-text">
+        <div class="nav-title">Teori Antrean</div>
+        <div class="nav-subtitle">M/M/1 · M/M/c · M/G/1 · M/D/1</div>
+      </div>
+    </button>
+    <button class="nav-item" onclick="showMateri('transport', this)">
+      <span class="nav-icon">🚚</span>
+      <div class="nav-text">
+        <div class="nav-title">Teori Transportasi</div>
+        <div class="nav-subtitle">NWC · Least Cost · VAM</div>
+      </div>
+    </button>
+    <button class="nav-item" onclick="showMateri('assignment', this)">
+      <span class="nav-icon">👷</span>
+      <div class="nav-text">
+        <div class="nav-title">Teori Penugasan</div>
+        <div class="nav-subtitle">Hungarian Method</div>
+      </div>
+    </button>
+    <button class="nav-item" onclick="showMateri('cpm', this)">
+      <span class="nav-icon">📅</span>
+      <div class="nav-text">
+        <div class="nav-title">CPM</div>
+        <div class="nav-subtitle">Critical Path Method</div>
+      </div>
+    </button>
+    <button class="nav-item" onclick="showMateri('pert', this)">
+      <span class="nav-icon">🎲</span>
+      <div class="nav-text">
+        <div class="nav-title">PERT</div>
+        <div class="nav-subtitle">Probabilistic Duration</div>
+      </div>
+    </button>
+  </nav>
+
+  <div class="materi-wrap">
+
+    <!-- =========================================== -->
+    <!-- MATERI 1: ANTREAN -->
+    <!-- =========================================== -->
+    <div class="materi active" id="materi-queue">
+      <div class="card card-glass">
+        <h2>📖 Apa Itu Teori Antrean?</h2>
+        <div class="esai-box">
+          <p><b>Bayangkan Anda mengantre di kasir supermarket.</b> Kadang cepat, kadang mengular. Teori antrean mempelajari bagaimana orang mengantre dan bagaimana mengoptimalkannya agar pelanggan tidak terlalu lama menunggu tanpa membuang biaya berlebih.</p>
+          <p>Teori ini membantu menjawab: berapa kasir ideal di supermarket? berapa tempat tidur rumah sakit? berapa bandwidth internet? Intinya: <b>jika kedatangan lebih cepat dari pelayanan, antrean menumpuk</b>. Karena kedatangan dan pelayanan bersifat acak, teori antrean membantu memperkirakan seberapa besar kemungkinan antrean panjang terjadi.</p>
+        </div>
+        <div class="analogy"><b>Analogi ember bocor:</b> Air masuk (kedatangan) vs air keluar (pelayanan). Jika masuk lebih cepat, ember penuh. Teori antrean hitung ukuran ember & lubang yang pas.</div>
+
+        <h3>🔑 Tiga Komponen Sistem Antrean</h3>
+        <div class="accordion"><div class="accordion-header">1. Proses Kedatangan (Poisson, λ)</div><div class="accordion-body"><p>Pola kedatangan acak dengan laju rata-rata λ (lambda). Contoh: 4 pelanggan per jam. Dalam model Poisson, kedatangan terjadi secara independen dan tidak saling mempengaruhi.</p></div></div>
+        <div class="accordion"><div class="accordion-header">2. Mekanisme Pelayanan (Eksponensial, μ, c)</div><div class="accordion-body"><p>Kecepatan layanan μ (mu) per server, dengan c jumlah server paralel. Contoh: μ=6 per jam, c=1. Waktu layanan diasumsikan eksponensial (acak).</p></div></div>
+        <div class="accordion"><div class="accordion-header">3. Disiplin Antrean (FIFO/LIFO/Priority)</div><div class="accordion-body"><p>Aturan siapa dilayani dulu. Kalkulator ini memakai FIFO (First In, First Out — yang datang duluan dilayani duluan), aturan paling umum di dunia nyata.</p></div></div>
+
+        <h3>📐 Notasi Kendall: A/B/C</h3>
+        <div class="formula">A / B / C</div>
+        <p><b>A</b> = pola kedatangan (M=Markovian/Poisson, D=Deterministik, G=General). <b>B</b> = pola pelayanan (M/D/G). <b>C</b> = jumlah server (1, 2, 3, ..., c).</p>
+
+        <h3>💡 Istilah Penting</h3>
+        <div class="accordion"><div class="accordion-header">ρ (rho) — Utilisasi Server</div><div class="accordion-body"><p>Persentase waktu server sibuk (0–100%). ρ≥1 berarti sistem tidak stabil (antrean tumbuh tanpa batas). Idealnya ρ di kisaran 0.6–0.8.</p></div></div>
+        <div class="accordion"><div class="accordion-header">L dan Lq — Jumlah Pelanggan</div><div class="accordion-body"><p><b>L</b> = rata-rata jumlah pelanggan di seluruh sistem (menunggu + dilayani). <b>Lq</b> = rata-rata yang menunggu di antrean saja.</p></div></div>
+        <div class="accordion"><div class="accordion-header">W dan Wq — Waktu Tunggu</div><div class="accordion-body"><p><b>W</b> = rata-rata waktu total di sistem. <b>Wq</b> = rata-rata waktu menunggu saja.</p></div></div>
+        <div class="accordion"><div class="accordion-header">Hukum Little: L = λ × W</div><div class="accordion-body"><p>Hubungan fundamental yang berlaku universal: jumlah rata-rata di sistem = laju kedatangan × waktu rata-rata di sistem.</p></div></div>
+      </div>
+
+      <div class="card">
+        <h2>🧮 Kalkulator Antrean</h2>
+        <label>Model</label>
+        <select id="model" onchange="updateFields()">
+          <option value="mm1">M/M/1 — Satu server (paling dasar)</option>
+          <option value="mmc">M/M/c — Multi server paralel</option>
+          <option value="mm1k">M/M/1/K — Kapasitas terbatas</option>
+          <option value="mg1">M/G/1 — Layanan umum</option>
+          <option value="md1">M/D/1 — Layanan konstan</option>
+        </select>
+        <div class="grid2">
+          <div><label>λ (laju kedatangan)</label><input type="number" id="lam" value="4" step="0.01" min="0.01"><p class="hint">misal: 4 pelanggan/jam</p></div>
+          <div><label>μ (laju pelayanan)</label><input type="number" id="mu" value="6" step="0.01" min="0.01"><p class="hint">misal: 6 pelanggan/jam/server</p></div>
+        </div>
+        <div id="extraFields"></div>
+        <div class="grid2">
+          <div><label>Cw — biaya tunggu (opsional)</label><input type="number" id="c_wait" placeholder="50" step="0.01"></div>
+          <div><label>Cs — biaya server (opsional)</label><input type="number" id="c_server" placeholder="100" step="0.01"></div>
+        </div>
+        <button class="btn" onclick="calculateQueue()">⚡ Hitung Hasil</button>
+      </div>
+
+      <div class="card result" id="resultCardQueue">
+        <h2>📊 Hasil Analisis Antrean</h2>
+        <div id="resultContentQueue"></div>
+      </div>
+
+      <div class="card">
+        <h2>⚖️ Bandingkan Model</h2>
+        <p class="hint">M/M/1 vs M/D/1 vs M/G/1 dengan λ dan μ yang sama.</p>
+        <button class="btn btn-sec" onclick="compareModels()">Bandingkan</button>
+        <div id="compareContent"></div>
+      </div>
+    </div>
+
+    <!-- =========================================== -->
+    <!-- MATERI 2: TRANSPORTASI -->
+    <!-- =========================================== -->
+    <div class="materi" id="materi-transport">
+      <div class="card card-glass">
+        <h2>📖 Apa Itu Teori Transportasi?</h2>
+        <div class="esai-box">
+          <p><b>Bayangkan Anda punya 3 gudang dan 3 toko.</b> Setiap gudang punya stok terbatas, setiap toko punya permintaan tertentu. Biaya kirim dari setiap gudang ke setiap toko berbeda-beda. <b>Bagaimana caranya mengirim barang agar total biaya kirim paling murah?</b> Inilah masalah transportasi.</p>
+          <p>Aplikasi nyata: distribusi barang dari pabrik ke gudang, alokasi produksi ke pasar, distribusi air bersih, pengiriman paket e-commerce, dan masih banyak lagi.</p>
+        </div>
+        <div class="analogy"><b>Analogi:</b> 3 ember air, 3 gelas kosong, biaya jalan beda-beda. Isi ketiga gelas dengan total biaya perjalanan air minimum.</div>
+
+        <h3>🔑 Tiga Elemen Utama</h3>
+        <div class="accordion"><div class="accordion-header">1. Supply (Sumber)</div><div class="accordion-body"><p>Kapasitas maksimum barang dari gudang S₁, S₂, dst. Tidak boleh mengirim melebihi stok.</p></div></div>
+        <div class="accordion"><div class="accordion-header">2. Demand (Tujuan)</div><div class="accordion-body"><p>Permintaan di toko D₁, D₂, dst. Harus terpenuhi semua (kecuali ada dummy).</p></div></div>
+        <div class="accordion"><div class="accordion-header">3. Biaya per Unit</div><div class="accordion-body"><p>c[i][j] = biaya kirim 1 unit dari sumber i ke tujuan j. Bisa berbeda-beda tiap pasangan.</p></div></div>
+
+        <h3>⚖️ Seimbang vs Tidak Seimbang</h3>
+        <div class="accordion"><div class="accordion-header">Seimbang (total supply = total demand)</div><div class="accordion-body"><p>Solusi langsung dihitung karena semua barang terkirim dan semua permintaan terpenuhi.</p></div></div>
+        <div class="accordion"><div class="accordion-header">Tidak Seimbang</div><div class="accordion-body"><p>Ditambah baris/kolom <b>dummy</b> dengan biaya 0 untuk menyeimbangkan. Dummy = "supply palsu" (barang tidak terkirim) atau "demand palsu" (permintaan tidak terpenuhi).</p></div></div>
+
+        <h3>🎯 Tiga Metode Solusi Awal</h3>
+        <div class="accordion"><div class="accordion-header">1. North-West Corner (NWC)</div><div class="accordion-body"><p>Mulai dari sel kiri atas, alokasikan, geser kanan/bawah. Mudah tapi belum tentu termurah karena tidak melihat biaya.</p></div></div>
+        <div class="accordion"><div class="accordion-header">2. Least Cost</div><div class="accordion-body"><p>Mulai dari sel dengan biaya terkecil. Lebih murah dari NWC, tapi belum tentu optimal.</p></div></div>
+        <div class="accordion"><div class="accordion-header">3. Vogel's Approximation (VAM)</div><div class="accordion-body"><p>Hitung penalty (selisih dua biaya terkecil) per baris/kolom, pilih yang terbesar. Hampir selalu mendekati optimal.</p></div></div>
+      </div>
+
+      <div class="card">
+        <h2>🚚 Kalkulator Transportasi</h2>
+        <div class="grid2">
+          <div><label>Jumlah Sumber</label><input type="number" id="t_sources" value="3" min="2" max="6" onchange="buildTransportMatrix()"></div>
+          <div><label>Jumlah Tujuan</label><input type="number" id="t_dest" value="3" min="2" max="6" onchange="buildTransportMatrix()"></div>
+        </div>
+        <label>Metode Solusi Awal</label>
+        <select id="t_method">
+          <option value="nwc">North-West Corner</option>
+          <option value="least_cost">Least Cost</option>
+          <option value="vam">Vogel (VAM)</option>
+        </select>
+        <h3>Matriks Biaya (baris=sumber, kolom=tujuan)</h3>
+        <div id="t_cost_matrix" class="matrix-input"></div>
+        <h3>Supply & Demand</h3>
+        <div id="t_supply_demand" class="matrix-input"></div>
+        <button class="btn" onclick="calculateTransport()">⚡ Hitung Transportasi</button>
+        <button class="btn btn-sec" onclick="loadTransportExample()">Muat Contoh</button>
+      </div>
+
+      <div class="card result" id="resultCardTransport">
+        <h2>📊 Hasil Transportasi</h2>
+        <div id="resultContentTransport"></div>
+      </div>
+    </div>
+
+    <!-- =========================================== -->
+    <!-- MATERI 3: PENUGASAN -->
+    <!-- =========================================== -->
+    <div class="materi" id="materi-assignment">
+      <div class="card card-glass">
+        <h2>📖 Apa Itu Teori Penugasan?</h2>
+        <div class="esai-box">
+          <p><b>Bayangkan Anda punya 3 karyawan dan 3 tugas.</b> Setiap karyawan punya keahlian berbeda, sehingga waktu/biaya menyelesaikan setiap tugas berbeda-beda. <b>Bagaimana caranya menugaskan agar total biaya paling murah?</b> Inilah masalah penugasan.</p>
+          <p>Aplikasi nyata: menugaskan salesman ke wilayah, mesin ke pekerjaan, dosen ke mata kuliah, supir ke rute, dan masih banyak lagi.</p>
+        </div>
+        <div class="analogy"><b>Analogi:</b> 3 kunci, 3 pintu. Setiap kunci bisa buka pintu mana saja, tapi beda waktu. Pasangkan agar total waktu minimum.</div>
+
+        <h3>🔑 Karakteristik</h3>
+        <div class="accordion"><div class="accordion-header">1. Matriks Persegi (n×n)</div><div class="accordion-body"><p>Jumlah pekerja = jumlah tugas. Jika tidak, tambahkan baris/kolom dummy dengan biaya 0.</p></div></div>
+        <div class="accordion"><div class="accordion-header">2. One-to-One Assignment</div><div class="accordion-body"><p>Setiap pekerja mendapat tepat satu tugas, setiap tugas dikerjakan tepat satu pekerja. Tidak boleh dobel.</p></div></div>
+        <div class="accordion"><div class="accordion-header">3. Minimasi Total Biaya</div><div class="accordion-body"><p>Solusi optimal = pasangan dengan total biaya paling kecil di antara semua kemungkinan.</p></div></div>
+
+        <h3>🎯 Metode Hungarian (Kuhn-Munkres)</h3>
+        <div class="esai-box">
+          <p><b>Metode Hungarian</b> adalah algoritma paling terkenal untuk penugasan optimal. Ditemukan Harold Kuhn (1955), dinamai berdasarkan karya Dénes Kőnig.</p>
+          <p><b>Ide dasarnya:</b> jika kita mengurangkan konstanta dari setiap baris atau kolom matriks biaya, solusi optimal tidak berubah! Karena setiap pekerja pasti mendapat satu tugas, pengurangan konstan tidak mengubah siapa dapat apa.</p>
+          <p><b>Langkah:</b> 1) kurangi minimum baris, 2) kurangi minimum kolom, 3) cari penugasan nol, 4) jika belum, tutup nol dengan garis minimum, 5) kurangi uncovered, tambah di intersection, ulangi.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>👷 Kalkulator Penugasan</h2>
+        <div class="grid2">
+          <div><label>Jumlah Pekerja = Tugas</label><input type="number" id="a_size" value="3" min="2" max="6" onchange="buildAssignmentMatrix()"></div>
+          <div></div>
+        </div>
+        <h3>Matriks Biaya (baris=pekerja, kolom=tugas)</h3>
+        <div id="a_cost_matrix" class="matrix-input"></div>
+        <button class="btn" onclick="calculateAssignment()">⚡ Hitung Penugasan</button>
+        <button class="btn btn-sec" onclick="loadAssignmentExample()">Muat Contoh</button>
+      </div>
+
+      <div class="card result" id="resultCardAssignment">
+        <h2>📊 Hasil Penugasan</h2>
+        <div id="resultContentAssignment"></div>
+      </div>
+    </div>
+
+    <!-- =========================================== -->
+    <!-- MATERI 4: CPM -->
+    <!-- =========================================== -->
+    <div class="materi" id="materi-cpm">
+      <div class="card card-glass">
+        <h2>📖 Apa Itu CPM (Critical Path Method)?</h2>
+        <div class="esai-box">
+          <p><b>Bayangkan Anda merencanakan proyek pernikahan.</b> Ada banyak tugas: pesan gedung, katering, undang tamu, dekorasi. Sebagian tugas harus selesai dulu sebelum tugas lain bisa dimulai. <b>Berapa lama total waktu proyek? Tugas mana yang paling menentukan?</b> Inilah yang dijawab CPM.</p>
+          <p><b>CPM</b> adalah metode untuk merencanakan dan mengendalikan proyek dengan mengidentifikasi <b>jalur kritis</b> — rangkaian aktivitas yang jika salah satunya terlambat, seluruh proyek ikut terlambat. Dikembangkan DuPont (1957) untuk proyek pemeliharaan pabrik kimia.</p>
+          <p>Cocok untuk proyek dengan <b>durasi aktivitas yang sudah pasti</b> (deterministik). Contoh: konstruksi bangunan, perakitan mesin, peluncuran produk.</p>
+        </div>
+        <div class="analogy"><b>Analogi:</b> Memasak nasi goreng. Cuci beras (2 menit), masak nasi (15 menit), potong sayur (5 menit), goreng (10 menit). Masak nasi & potong sayur bisa bersamaan, tapi goreng baru bisa setelah keduanya siap. Jalur kritis = rangkaian tugas terpanjang yang menentukan total waktu.</div>
+
+        <h3>🔑 Konsep Kunci</h3>
+        <div class="accordion"><div class="accordion-header">1. Aktivitas & Predecessor</div><div class="accordion-body"><p><b>Aktivitas</b> = tugas dalam proyek. <b>Predecessor</b> = aktivitas yang harus selesai sebelum aktivitas ini bisa dimulai. Contoh: C predecessors = A, B artinya C baru bisa mulai setelah A dan B selesai.</p></div></div>
+        <div class="accordion"><div class="accordion-header">2. ES, EF, LS, LF</div><div class="accordion-body"><p><b>ES (Early Start)</b> = waktu paling awal aktivitas bisa dimulai. <b>EF (Early Finish)</b> = ES + durasi. <b>LS (Late Start)</b> = waktu paling lambat mulai agar proyek tidak terlambat. <b>LF (Late Finish)</b> = LS + durasi.</p></div></div>
+        <div class="accordion"><div class="accordion-header">3. Slack (Kelonggaran)</div><div class="accordion-body"><p><b>Slack = LS − ES</b> (atau LF − EF). Berapa lama aktivitas bisa ditunda tanpa memperlambat proyek. Slack = 0 → aktivitas <b>kritis</b>.</p></div></div>
+        <div class="accordion"><div class="accordion-header">4. Jalur Kritis</div><div class="accordion-body"><p>Rangkaian aktivitas dengan slack = 0. Ini <b>jalur terpanjang</b> dalam jaringan proyek, dan menentukan durasi total proyek. Jika salah satu aktivitas di jalur ini terlambat, seluruh proyek terlambat.</p></div></div>
+
+        <h3>📐 Dua Pass CPM</h3>
+        <div class="formula">
+          Forward Pass: ES = max(EF predecessor), EF = ES + durasi<br>
+          Backward Pass: LF = min(LS successor), LS = LF − durasi<br>
+          Slack = LS − ES (atau LF − EF)<br>
+          Durasi proyek = max(EF semua aktivitas)
+        </div>
+
+        <h3>💡 Mengapa CPM Penting?</h3>
+        <div class="esai-box">
+          <ul>
+            <li>Mengetahui <b>total durasi minimum</b> proyek.</li>
+            <li>Mengidentifikasi aktivitas yang <b>tidak boleh terlambat</b> (jalur kritis).</li>
+            <li>Mengalokasikan sumber daya efisien — fokus pengawasan pada aktivitas kritis.</li>
+            <li>Menghemat biaya dengan menunda aktivitas non-kritis (crash vs normal cost).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Kalkulator CPM</h2>
+        <p class="hint">Isi ID aktivitas (unik), durasi, dan predecessor (pisah koma). Kosongkan jika tidak ada.</p>
+        <div id="cpm_activities"></div>
+        <button class="btn btn-sec" onclick="addCpmActivity()">+ Tambah Aktivitas</button>
+        <button class="btn btn-sec" onclick="loadCpmExample()">Muat Contoh</button>
+        <button class="btn" onclick="calculateCpm()">⚡ Hitung CPM</button>
+      </div>
+
+      <div class="card result" id="resultCardCpm">
+        <h2>📊 Hasil CPM</h2>
+        <div id="resultContentCpm"></div>
+      </div>
+    </div>
+
+    <!-- =========================================== -->
+    <!-- MATERI 5: PERT -->
+    <!-- =========================================== -->
+    <div class="materi" id="materi-pert">
+      <div class="card card-glass">
+        <h2>📖 Apa Itu PERT (Program Evaluation and Review Technique)?</h2>
+        <div class="esai-box">
+          <p><b>Bayangkan Anda merencanakan proyek penelitian atau pengembangan produk baru.</b> Berbeda dengan konstruksi, durasi aktivitasnya <b>tidak pasti</b>. Anda hanya bisa menebak: optimis (jika lancar), realistis (biasanya), dan pesimis (jika banyak hambatan). <b>Berapa perkiraan waktu total? Seberapa besar ketidakpastiannya?</b> Inilah yang dijawab PERT.</p>
+          <p><b>PERT</b> adalah metode manajemen proyek yang memperhitungkan <b>ketidakpastian durasi aktivitas</b>. Dikembangkan Angkatan Laut AS (1958) untuk proyek rudal Polaris. Berbeda dengan CPM yang mengasumsikan durasi pasti, PERT menggunakan <b>tiga estimasi waktu</b> per aktivitas.</p>
+          <p>Cocok untuk proyek <b>R&D, inovasi, atau proyek dengan ketidakpastian tinggi</b>.</p>
+        </div>
+        <div class="analogy"><b>Analogi:</b> Memperkirakan perjalanan ke kantor. Lancar (optimis) 30 menit, biasanya (realistis) 45 menit, macet parah (pesimis) 90 menit. Berapa rata-rata waktu? PERT membantu menghitungnya secara statistik.</div>
+
+        <h3>🔑 Konsep Kunci</h3>
+        <div class="accordion"><div class="accordion-header">1. Tiga Estimasi Waktu</div><div class="accordion-body"><p><b>O (Optimistic)</b> = waktu jika semua lancar. <b>M (Most Likely)</b> = waktu paling mungkin. <b>P (Pessimistic)</b> = waktu jika banyak hambatan.</p></div></div>
+        <div class="accordion"><div class="accordion-header">2. Expected Duration (Te)</div><div class="accordion-body"><p><b>Te = (O + 4M + P) / 6</b>. Bobot M lebih besar (4×) karena dianggap paling realistis. Disebut juga beta distribution approximation.</p></div></div>
+        <div class="accordion"><div class="accordion-header">3. Variance</div><div class="accordion-body"><p><b>σ² = ((P − O) / 6)²</b>. Mengukur ketidakpastian. Semakin besar P−O, semakin tidak pasti.</p></div></div>
+        <div class="accordion"><div class="accordion-header">4. Standar Deviasi Proyek</div><div class="accordion-body"><p>σ_proyek = √(Σ σ²_aktivitas kritis). Hanya aktivitas di jalur kritis yang berkontribusi pada ketidakpastian total.</p></div></div>
+        <div class="accordion"><div class="accordion-header">5. Probabilitas Selesai</div><div class="accordion-body"><p>Distribusi normal: <b>Z = (Target − Durasi Proyek) / σ_proyek</b>. Lalu cari P(Z) dari tabel normal standar. Contoh: P(T ≤ 30) = peluang proyek selesai ≤ 30 satuan waktu.</p></div></div>
+
+        <h3>📐 Rumus PERT</h3>
+        <div class="formula">
+          Te = (O + 4M + P) / 6<br>
+          σ² = ((P − O) / 6)²<br>
+          σ_proyek = √(Σ σ²_kritis)<br>
+          Z = (Target − Durasi) / σ<br>
+          P(T ≤ Target) = Φ(Z) = 0.5 × (1 + erf(Z/√2))
+        </div>
+
+        <h3>💡 Perbandingan CPM vs PERT</h3>
+        <table>
+          <tr><th>Aspek</th><th>CPM</th><th>PERT</th></tr>
+          <tr><td>Durasi</td><td>Deterministik</td><td>Probabilistik</td></tr>
+          <tr><td>Fokus</td><td>Biaya vs waktu</td><td>Ketidakpastian</td></tr>
+          <tr><td>Asal</td><td>DuPont (1957)</td><td>US Navy (1958)</td></tr>
+          <tr><td>Cocok untuk</td><td>Konstruksi</td><td>R&D, inovasi</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>🎲 Kalkulator PERT</h2>
+        <p class="hint">Isi O (optimis), M (realistis), P (pesimis), dan predecessor. Syarat: O ≤ M ≤ P.</p>
+        <div id="pert_activities"></div>
+        <button class="btn btn-sec" onclick="addPertActivity()">+ Tambah Aktivitas</button>
+        <button class="btn btn-sec" onclick="loadPertExample()">Muat Contoh</button>
+        <div style="margin-top:12px">
+          <label>Target Waktu (opsional, untuk hitung probabilitas)</label>
+          <input type="number" id="pert_target" placeholder="misal: 30" step="0.01">
+        </div>
+        <button class="btn" onclick="calculatePert()">⚡ Hitung PERT</button>
+      </div>
+
+      <div class="card result" id="resultCardPert">
+        <h2>📊 Hasil PERT</h2>
+        <div id="resultContentPert"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>📚 Dibuat untuk pembelajaran <span class="gradient-text">Operation Research</span></p>
+    <p style="margin-top:4px;">Antrean · Transportasi · Penugasan · CPM · PERT</p>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+// NAVIGASI
+// ============================================================
+function showMateri(name, btn) {
+  document.querySelectorAll('.materi').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('materi-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// ACCORDION
+// ============================================================
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('accordion-header')) {
+    e.target.parentElement.classList.toggle('open');
+  }
+});
+
+// ============================================================
+// ANTREAN
+// ============================================================
+function updateFields() {
+  const model = document.getElementById('model').value;
+  const extra = document.getElementById('extraFields');
+  if (model === 'mmc') extra.innerHTML = '<label>c — jumlah server</label><input type="number" id="c" value="2" min="1" step="1">';
+  else if (model === 'mm1k') extra.innerHTML = '<label>K — kapasitas sistem</label><input type="number" id="K" value="5" min="1" step="1">';
+  else if (model === 'mg1') extra.innerHTML = '<label>σ — standar deviasi waktu layanan</label><input type="number" id="sigma" value="0.1" step="0.01" min="0">';
+  else extra.innerHTML = '';
+}
+updateFields();
+
+async function calculateQueue() {
+  const body = { model: document.getElementById('model').value,
+                 lam: document.getElementById('lam').value,
+                 mu: document.getElementById('mu').value };
+  const c = document.getElementById('c'); if (c) body.c = c.value;
+  const K = document.getElementById('K'); if (K) body.K = K.value;
+  const sigma = document.getElementById('sigma'); if (sigma) body.sigma = sigma.value;
+  const cw = document.getElementById('c_wait').value; if (cw) body.c_wait = cw;
+  const cs = document.getElementById('c_server').value; if (cs) body.c_server = cs;
+  const res = await fetch('/api/calculate', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}).then(r => r.json());
+  const card = document.getElementById('resultCardQueue'); const out = document.getElementById('resultContentQueue');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">' + res.model + '</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<h3>Angka Hasil</h3><div class="metrics">' +
+    '<div class="metric"><div class="label">ρ Utilisasi</div><div class="value">' + res.rho.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">P₀</div><div class="value">' + res.P0.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">L</div><div class="value">' + res.L.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">Lq</div><div class="value">' + res.Lq.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">W</div><div class="value">' + res.W.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">Wq</div><div class="value">' + res.Wq.toFixed(4) + '</div></div></div>';
+  if (res.P_wait !== undefined) html += '<div class="info-box"><b>Peluang menunggu:</b> ' + (res.P_wait*100).toFixed(2) + '%</div>';
+  if (res.P_block !== undefined) html += '<div class="warning-box"><b>Peluang blocking:</b> ' + (res.P_block*100).toFixed(2) + '%</div>';
+  if (res.detail) { html += '<h3>Detail</h3><ul class="detail-list">';
+    for (const [k, v] of Object.entries(res.detail)) html += '<li><span>' + k + '</span><b>' + (typeof v === 'number' ? v.toFixed(4) : v) + '</b></li>';
+    html += '</ul>'; }
+  if (res.cost) { html += '<h3>💰 Biaya</h3><div class="metrics">' +
+    '<div class="metric"><div class="label">Biaya Tunggu</div><div class="value">' + res.cost.waiting_cost.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Biaya Server</div><div class="value">' + res.cost.server_cost.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Total</div><div class="value">' + res.cost.total_cost.toFixed(2) + '</div></div></div>'; }
+  out.innerHTML = html;
+}
+
+async function compareModels() {
+  const body = { lam: document.getElementById('lam').value, mu: document.getElementById('mu').value };
+  const sigma = document.getElementById('sigma'); if (sigma) body.sigma = sigma.value;
+  const res = await fetch('/api/compare', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}).then(r => r.json());
+  const out = document.getElementById('compareContent');
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<table><tr><th>Model</th><th>ρ</th><th>Lq</th><th>Wq</th><th>W</th></tr>';
+  res.rows.forEach(r => html += '<tr><td><b>' + r.model + '</b></td><td>' + r.rho.toFixed(4) + '</td><td>' + r.Lq.toFixed(4) + '</td><td>' + r.Wq.toFixed(4) + '</td><td>' + r.W.toFixed(4) + '</td></tr>');
+  html += '</table><div class="info-box" style="margin-top:10px"><b>💡 Interpretasi:</b> M/D/1 selalu Lq lebih kecil dari M/M/1 karena waktu layanan konstan mengurangi ketidakpastian.</div>';
+  out.innerHTML = html;
+}
+
+// ============================================================
+// TRANSPORTASI
+// ============================================================
+function buildTransportMatrix() {
+  const ns = parseInt(document.getElementById('t_sources').value) || 3;
+  const nd = parseInt(document.getElementById('t_dest').value) || 3;
+  let html = '<div style="display:grid;grid-template-columns: 40px repeat(' + nd + ', 1fr);gap:5px;">';
+  html += '<div></div>';
+  for (let j = 0; j < nd; j++) html += '<div class="row-label">T' + (j+1) + '</div>';
+  for (let i = 0; i < ns; i++) {
+    html += '<div class="row-label">S' + (i+1) + '</div>';
+    for (let j = 0; j < nd; j++) html += '<input type="number" id="tc_' + i + '_' + j + '" value="0" step="1">';
+  }
+  html += '</div>';
+  document.getElementById('t_cost_matrix').innerHTML = html;
+  let html2 = '<div style="display:grid;grid-template-columns: repeat(' + (nd + 1) + ', 1fr);gap:5px;">';
+  for (let i = 0; i < ns; i++) html2 += '<div><label>Supply S' + (i+1) + '</label><input type="number" id="ts_' + i + '" value="0" step="1"></div>';
+  html2 += '<div></div>';
+  for (let j = 0; j < nd; j++) html2 += '<div><label>Demand T' + (j+1) + '</label><input type="number" id="td_' + j + '" value="0" step="1"></div>';
+  html2 += '</div>';
+  document.getElementById('t_supply_demand').innerHTML = html2;
+}
+
+function loadTransportExample() {
+  document.getElementById('t_sources').value = 3;
+  document.getElementById('t_dest').value = 3;
+  buildTransportMatrix();
+  const cost = [[4,8,8],[16,24,16],[8,16,24]];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) document.getElementById('tc_'+i+'_'+j).value = cost[i][j];
+  [50,60,30].forEach((v,i) => document.getElementById('ts_'+i).value = v);
+  [40,60,40].forEach((v,j) => document.getElementById('td_'+j).value = v);
+}
+
+async function calculateTransport() {
+  const ns = parseInt(document.getElementById('t_sources').value);
+  const nd = parseInt(document.getElementById('t_dest').value);
+  const cost = [];
+  for (let i = 0; i < ns; i++) { const row = []; for (let j = 0; j < nd; j++) row.push(parseFloat(document.getElementById('tc_'+i+'_'+j).value) || 0); cost.push(row); }
+  const supply = []; for (let i = 0; i < ns; i++) supply.push(parseFloat(document.getElementById('ts_'+i).value) || 0);
+  const demand = []; for (let j = 0; j < nd; j++) demand.push(parseFloat(document.getElementById('td_'+j).value) || 0);
+  const metode = document.getElementById('t_method').value;
+  const res = await fetch('/api/transport', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cost, supply, demand, metode})}).then(r => r.json());
+  const card = document.getElementById('resultCardTransport'); const out = document.getElementById('resultContentTransport');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">' + res.metode + '</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  if (!res.balanced) html += '<div class="warning-box"><b>⚠️ Tidak seimbang:</b> supply=' + res.total_supply + ', demand=' + res.total_demand + '. Ditambah dummy.</div>';
+  else html += '<div class="info-box">✅ Seimbang: supply = demand = ' + res.total_supply + '</div>';
+  html += '<h3>📋 Matriks Alokasi</h3><table><tr><th>S\\T</th>';
+  for (let j = 0; j < res.allocation[0].length; j++) html += '<th>T' + (j+1) + '</th>';
+  html += '<th>Supply</th></tr>';
+  for (let i = 0; i < res.allocation.length; i++) {
+    html += '<tr><td><b>S' + (i+1) + '</b></td>';
+    for (let j = 0; j < res.allocation[i].length; j++) {
+      const val = res.allocation[i][j];
+      html += '<td class="' + (val > 0 ? 'highlight' : '') + '">' + val + '</td>';
+    }
+    html += '<td>' + res.supply_used[i] + '</td></tr>';
+  }
+  html += '<tr><td><b>Demand</b></td>';
+  for (let j = 0; j < res.demand_used.length; j++) html += '<td>' + res.demand_used[j] + '</td>';
+  html += '<td></td></tr></table>';
+  html += '<h3>💰 Rincian</h3><ul class="detail-list">';
+  res.rincian.forEach(r => html += '<li><span>' + r.from + '→' + r.to + ' (' + r.qty + '×' + r.cost + ')</span><b>= ' + r.subtotal.toFixed(2) + '</b></li>');
+  html += '</ul>';
+  html += '<div class="metric" style="margin-top:10px"><div class="label">Total Biaya</div><div class="value">' + res.total_cost.toFixed(2) + '</div></div>';
+  html += res.optimal ? '<div class="success-box" style="margin-top:10px">✅ Optimal (uji MODI)</div>' : '<div class="warning-box" style="margin-top:10px">⚠️ Belum tentu optimal. Gunakan MODI untuk perbaikan.</div>';
+  out.innerHTML = html;
+}
+
+// ============================================================
+// PENUGASAN
+// ============================================================
+function buildAssignmentMatrix() {
+  const n = parseInt(document.getElementById('a_size').value) || 3;
+  let html = '<div style="display:grid;grid-template-columns: 40px repeat(' + n + ', 1fr);gap:5px;">';
+  html += '<div></div>';
+  for (let j = 0; j < n; j++) html += '<div class="row-label">T' + (j+1) + '</div>';
+  for (let i = 0; i < n; i++) {
+    html += '<div class="row-label">P' + (i+1) + '</div>';
+    for (let j = 0; j < n; j++) html += '<input type="number" id="ac_' + i + '_' + j + '" value="0" step="1">';
+  }
+  html += '</div>';
+  document.getElementById('a_cost_matrix').innerHTML = html;
+}
+
+function loadAssignmentExample() {
+  document.getElementById('a_size').value = 3;
+  buildAssignmentMatrix();
+  const cost = [[8,4,6],[6,5,9],[5,7,4]];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) document.getElementById('ac_'+i+'_'+j).value = cost[i][j];
+}
+
+async function calculateAssignment() {
+  const n = parseInt(document.getElementById('a_size').value);
+  const cost = [];
+  for (let i = 0; i < n; i++) { const row = []; for (let j = 0; j < n; j++) row.push(parseFloat(document.getElementById('ac_'+i+'_'+j).value) || 0); cost.push(row); }
+  const res = await fetch('/api/assignment', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cost})}).then(r => r.json());
+  const card = document.getElementById('resultCardAssignment'); const out = document.getElementById('resultContentAssignment');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">Hungarian Method</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<h3>🎯 Pasangan Optimal</h3><table><tr><th>Pekerja</th><th>Tugas</th><th>Biaya</th></tr>';
+  res.assignment.forEach(a => html += '<tr><td><b>' + a.worker + '</b></td><td>' + a.task + '</td><td>' + a.cost.toFixed(2) + '</td></tr>');
+  html += '</table>';
+  html += '<div class="metric" style="margin-top:10px"><div class="label">Total Biaya</div><div class="value">' + res.total_cost.toFixed(2) + '</div></div>';
+  html += '<h3>🔍 Langkah Hungarian</h3>';
+  res.steps.forEach(s => {
+    html += '<div style="margin-bottom:10px"><b style="font-size:0.85rem;color:var(--violet-light)">' + s.step + '</b>';
+    if (s.matrix) {
+      html += '<table style="margin-top:4px"><tr><th></th>';
+      for (let j = 0; j < s.matrix[0].length; j++) html += '<th>T' + (j+1) + '</th>';
+      html += '</tr>';
+      s.matrix.forEach((row, i) => { html += '<tr><th>P' + (i+1) + '</th>'; row.forEach(v => html += '<td>' + v + '</td>'); html += '</tr>'; });
+      html += '</table>';
+    }
+    html += '</div>';
+  });
+  out.innerHTML = html;
+}
+
+// ============================================================
+// CPM
+// ============================================================
+let cpmCount = 0;
+function addCpmActivity(data) {
+  cpmCount++;
+  const id = 'cpm_act_' + cpmCount;
+  const actId = (data && data.id) || String.fromCharCode(64 + cpmCount);
+  const name = (data && data.name) || '';
+  const dur = (data && data.duration) || 1;
+  const preds = (data && data.predecessors) ? data.predecessors.join(', ') : '';
+  const html = '<div class="activity-card" id="' + id + '">' +
+    '<div class="header"><b>Aktivitas ' + actId + '</b><button class="btn-sm" onclick="document.getElementById(\'' + id + '\').remove()">Hapus</button></div>' +
+    '<div class="grid3">' +
+    '<div><label>ID</label><input type="text" class="cpm-id" value="' + actId + '"></div>' +
+    '<div><label>Durasi</label><input type="number" class="cpm-dur" value="' + dur + '" step="0.01" min="0"></div>' +
+    '<div><label>Nama (opsional)</label><input type="text" class="cpm-name" value="' + name + '"></div>' +
+    '</div>' +
+    '<label>Predecessor (pisah koma)</label><input type="text" class="cpm-pred" value="' + preds + '" placeholder="misal: A, B">' +
+    '</div>';
+  document.getElementById('cpm_activities').insertAdjacentHTML('beforeend', html);
+}
+
+function loadCpmExample() {
+  document.getElementById('cpm_activities').innerHTML = '';
+  cpmCount = 0;
+  [{id:'A',name:'Persiapan',duration:2,predecessors:[]},
+   {id:'B',name:'Galian',duration:4,predecessors:['A']},
+   {id:'C',name:'Pondasi',duration:6,predecessors:['B']},
+   {id:'D',name:'Struktur',duration:8,predecessors:['C']},
+   {id:'E',name:'Atap',duration:3,predecessors:['D']},
+   {id:'F',name:'Finishing',duration:2,predecessors:['E']}].forEach(a => addCpmActivity(a));
+}
+
+async function calculateCpm() {
+  const cards = document.querySelectorAll('#cpm_activities .activity-card');
+  const activities = [];
+  cards.forEach(c => {
+    const id = c.querySelector('.cpm-id').value.trim();
+    const name = c.querySelector('.cpm-name').value.trim();
+    const dur = parseFloat(c.querySelector('.cpm-dur').value) || 0;
+    const predStr = c.querySelector('.cpm-pred').value;
+    const preds = predStr.split(',').map(s => s.trim()).filter(s => s);
+    if (id) activities.push({id, name: name || id, duration: dur, predecessors: preds});
+  });
+  if (!activities.length) { alert('Tambahkan minimal 1 aktivitas.'); return; }
+  const res = await fetch('/api/cpm', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({activities})}).then(r => r.json());
+  const card = document.getElementById('resultCardCpm'); const out = document.getElementById('resultContentCpm');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">CPM</span>';
+  html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<div class="metrics">' +
+    '<div class="metric"><div class="label">Durasi Proyek</div><div class="value">' + res.project_duration.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Aktivitas Kritis</div><div class="value">' + res.critical_path.length + '</div></div>' +
+    '</div>';
+  html += '<h3>📋 Tabel Aktivitas</h3><table><tr><th>ID</th><th>Dur</th><th>Pred</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Slack</th><th>Kritis?</th></tr>';
+  res.activities.forEach(a => {
+    html += '<tr class="' + (a.critical ? 'critical-row' : '') + '"><td><b>' + a.id + '</b></td><td>' + a.duration + '</td><td>' + (a.predecessors.join(',') || '-') + '</td><td>' + a.ES.toFixed(2) + '</td><td>' + a.EF.toFixed(2) + '</td><td>' + a.LS.toFixed(2) + '</td><td>' + a.LF.toFixed(2) + '</td><td>' + a.slack.toFixed(2) + '</td><td>' + (a.critical ? '✅' : '❌') + '</td></tr>';
+  });
+  html += '</table>';
+  html += '<h3>🎯 Jalur Kritis</h3><div class="formula">' + res.critical_path.join(' → ') + '</div>';
+  html += '<h3>🔍 Langkah-Langkah</h3><ol class="steps-list">';
+  res.steps.forEach(s => html += '<li><b>' + s.step + '</b><br><span style="color:var(--text-3)">' + s.detail + '</span></li>');
+  html += '</ol>';
+  out.innerHTML = html;
+}
+
+// ============================================================
+// PERT
+// ============================================================
+let pertCount = 0;
+function addPertActivity(data) {
+  pertCount++;
+  const id = 'pert_act_' + pertCount;
+  const actId = (data && data.id) || String.fromCharCode(64 + pertCount);
+  const name = (data && data.name) || '';
+  const O = (data && data.optimistic) || 1;
+  const M = (data && data.most_likely) || 2;
+  const P = (data && data.pessimistic) || 3;
+  const preds = (data && data.predecessors) ? data.predecessors.join(', ') : '';
+  const html = '<div class="activity-card" id="' + id + '">' +
+    '<div class="header"><b>Aktivitas ' + actId + '</b><button class="btn-sm" onclick="document.getElementById(\'' + id + '\').remove()">Hapus</button></div>' +
+    '<div class="grid3">' +
+    '<div><label>ID</label><input type="text" class="pert-id" value="' + actId + '"></div>' +
+    '<div><label>Nama</label><input type="text" class="pert-name" value="' + name + '"></div>' +
+    '<div><label>Predecessor</label><input type="text" class="pert-pred" value="' + preds + '" placeholder="A, B"></div>' +
+    '</div>' +
+    '<div class="grid3">' +
+    '<div><label>O (optimis)</label><input type="number" class="pert-O" value="' + O + '" step="0.01" min="0"></div>' +
+    '<div><label>M (realistis)</label><input type="number" class="pert-M" value="' + M + '" step="0.01" min="0"></div>' +
+    '<div><label>P (pesimis)</label><input type="number" class="pert-P" value="' + P + '" step="0.01" min="0"></div>' +
+    '</div>' +
+    '</div>';
+  document.getElementById('pert_activities').insertAdjacentHTML('beforeend', html);
+}
+
+function loadPertExample() {
+  document.getElementById('pert_activities').innerHTML = '';
+  pertCount = 0;
+  [{id:'A',name:'Riset',optimistic:2,most_likely:4,pessimistic:6,predecessors:[]},
+   {id:'B',name:'Prototipe',optimistic:3,most_likely:5,pessimistic:9,predecessors:['A']},
+   {id:'C',name:'Uji Coba',optimistic:2,most_likely:4,pessimistic:8,predecessors:['B']},
+   {id:'D',name:'Produksi',optimistic:1,most_likely:2,pessimistic:3,predecessors:['C']},
+   {id:'E',name:'Peluncuran',optimistic:1,most_likely:1,pessimistic:2,predecessors:['D']}].forEach(a => addPertActivity(a));
+}
+
+async function calculatePert() {
+  const cards = document.querySelectorAll('#pert_activities .activity-card');
+  const activities = [];
+  cards.forEach(c => {
+    const id = c.querySelector('.pert-id').value.trim();
+    const name = c.querySelector('.pert-name').value.trim();
+    const O = parseFloat(c.querySelector('.pert-O').value);
+    const M = parseFloat(c.querySelector('.pert-M').value);
+    const P = parseFloat(c.querySelector('.pert-P').value);
+    const predStr = c.querySelector('.pert-pred').value;
+    const preds = predStr.split(',').map(s => s.trim()).filter(s => s);
+    if (id) activities.push({id, name: name || id, optimistic: O, most_likely: M, pessimistic: P, predecessors: preds});
+  });
+  if (!activities.length) { alert('Tambahkan minimal 1 aktivitas.'); return; }
+  const target = document.getElementById('pert_target').value;
+  const res = await fetch('/api/pert', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({activities, target: target || null})}).then(r => r.json());
+  const card = document.getElementById('resultCardPert'); const out = document.getElementById('resultContentPert');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">PERT</span>';
+  html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<div class="metrics">' +
+    '<div class="metric"><div class="label">Durasi Rata-rata</div><div class="value">' + res.project_duration.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Std Deviasi</div><div class="value">' + res.project_std.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Variance</div><div class="value">' + res.project_variance.toFixed(2) + '</div></div>' +
+    '</div>';
+  if (res.probability !== undefined && res.probability) {
+    const p = res.probability;
+    html += '<div class="info-box"><b>🎯 Probabilitas Selesai ≤ Target (' + res.target + '):</b> ' + (p.prob * 100).toFixed(2) + '%<br>Z = (' + res.target + ' − ' + res.project_duration.toFixed(2) + ') / ' + res.project_std.toFixed(2) + ' = ' + p.z.toFixed(4) + '</div>';
+  }
+  html += '<h3>📋 Tabel Aktivitas</h3><table><tr><th>ID</th><th>O</th><th>M</th><th>P</th><th>Te</th><th>Var</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Slack</th><th>Kritis?</th></tr>';
+  res.activities.forEach(a => {
+    html += '<tr class="' + (a.critical ? 'critical-row' : '') + '"><td><b>' + a.id + '</b></td><td>' + a.O + '</td><td>' + a.M + '</td><td>' + a.P + '</td><td>' + a.expected.toFixed(3) + '</td><td>' + a.variance.toFixed(3) + '</td><td>' + a.ES.toFixed(2) + '</td><td>' + a.EF.toFixed(2) + '</td><td>' + a.LS.toFixed(2) + '</td><td>' + a.LF.toFixed(2) + '</td><td>' + a.slack.toFixed(2) + '</td><td>' + (a.critical ? '✅' : '❌') + '</td></tr>';
+  });
+  html += '</table>';
+  html += '<h3>🎯 Jalur Kritis</h3><div class="formula">' + res.critical_path.join(' → ') + '</div>';
+  html += '<h3>🔍 Langkah-Langkah</h3><ol class="steps-list">';
+  res.steps.forEach(s => html += '<li><b>' + s.step + '</b><br><span style="color:var(--text-3)">' + s.detail + '</span></li>');
+  html += '</ol>';
+  out.innerHTML = html;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+buildTransportMatrix();
+buildAssignmentMatrix();
+loadCpmExample();
+loadPertExample();
+</script>
+
+</body>
+</html>
