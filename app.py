@@ -1,5 +1,5 @@
 """
-Queueing Theory Calculator - Web App
+Queueing Theory Calculator - Web App (Versi Vercel + Edukasi)
 Mendukung: M/M/1, M/M/c, M/M/1/K, M/G/1, M/D/1
 """
 from flask import Flask, render_template, request, jsonify
@@ -7,9 +7,13 @@ import math
 
 app = Flask(__name__)
 
+
+# ============================================================
+# MODEL MATEMATIKA
+# ============================================================
 def mm1(lam, mu):
     if lam >= mu:
-        return {"error": "Sistem tidak stabil: lambda harus < mu"}
+        return {"error": "Sistem tidak stabil: laju kedatangan (λ) harus lebih kecil dari laju pelayanan (μ). Jika tidak, antrean akan terus tumbuh tanpa batas."}
     rho = lam / mu
     L = rho / (1 - rho)
     Lq = rho**2 / (1 - rho)
@@ -20,19 +24,24 @@ def mm1(lam, mu):
     return {
         "model": "M/M/1", "rho": rho, "P0": P0,
         "L": L, "Lq": Lq, "W": W, "Wq": Wq,
-        "P_system_empty": P0, "P_wait": rho,
+        "P_wait": rho,
         "detail": {
-            "P(n=0)": Pn(0), "P(n=1)": Pn(1), "P(n=2)": Pn(2),
-            "P(n=3)": Pn(3), "P(n=5)": Pn(5), "P(n=10)": Pn(10),
+            "Peluang sistem kosong P(0)": Pn(0),
+            "Peluang ada 1 pelanggan P(1)": Pn(1),
+            "Peluang ada 2 pelanggan P(2)": Pn(2),
+            "Peluang ada 3 pelanggan P(3)": Pn(3),
+            "Peluang ada 5 pelanggan P(5)": Pn(5),
+            "Peluang ada 10 pelanggan P(10)": Pn(10),
         },
     }
 
+
 def mmc(lam, mu, c):
     if c < 1:
-        return {"error": "Jumlah server c harus >= 1"}
+        return {"error": "Jumlah server (c) minimal 1."}
     rho = lam / (c * mu)
     if rho >= 1:
-        return {"error": f"Sistem tidak stabil: rho = {rho:.4f} >= 1"}
+        return {"error": f"Sistem tidak stabil: utilisasi (ρ) = {rho:.4f} ≥ 1. Tambah jumlah server atau kurangi laju kedatangan."}
     a = lam / mu
     sum_terms = sum(a**n / math.factorial(n) for n in range(c))
     last_term = (a**c / math.factorial(c)) * (1 / (1 - rho))
@@ -46,15 +55,16 @@ def mmc(lam, mu, c):
         "model": f"M/M/{c}", "rho": rho, "P0": P0,
         "L": L, "Lq": Lq, "W": W, "Wq": Wq, "P_wait": Pw,
         "detail": {
-            "Erlang_C (P_wait)": Pw,
-            "Avg server sibuk": a,
+            "Erlang-C (peluang menunggu)": Pw,
+            "Rata-rata server sibuk": a,
             "Utilisasi per server": rho,
         },
     }
 
+
 def mm1k(lam, mu, K):
     if K < 1:
-        return {"error": "Kapasitas K harus >= 1"}
+        return {"error": "Kapasitas sistem (K) minimal 1."}
     rho = lam / mu
     if abs(rho - 1) < 1e-9:
         P0 = 1 / (K + 1)
@@ -78,15 +88,16 @@ def mm1k(lam, mu, K):
         "L": L, "Lq": Lq, "W": W, "Wq": Wq,
         "P_block": PK, "lambda_effective": lam_eff,
         "detail": {
-            "Prob sistem penuh (P_K)": PK,
-            "lambda efektif": lam_eff,
-            "lambda hilang (balking)": lam * PK,
+            "Peluang sistem penuh (P_K)": PK,
+            "Laju kedatangan efektif (λ_eff)": lam_eff,
+            "Pelanggan hilang (balking) per waktu": lam * PK,
         },
     }
 
+
 def mg1(lam, mu, sigma):
     if lam >= mu:
-        return {"error": "Sistem tidak stabil: lambda harus < mu"}
+        return {"error": "Sistem tidak stabil: λ harus < μ."}
     rho = lam / mu
     ES = 1 / mu
     ES2 = sigma**2 + ES**2
@@ -98,16 +109,17 @@ def mg1(lam, mu, sigma):
         "model": "M/G/1", "rho": rho, "P0": 1 - rho,
         "L": L, "Lq": Lq, "W": W, "Wq": Wq,
         "detail": {
-            "E[S] rata-rata servis": ES,
-            "E[S^2] momen kedua": ES2,
-            "sigma pelayanan": sigma,
-            "Metode": "Pollaczek-Khinchine",
+            "Rata-rata waktu layanan E[S]": ES,
+            "Momen kedua E[S²]": ES2,
+            "Standar deviasi layanan (σ)": sigma,
+            "Metode": "Rumus Pollaczek-Khinchine",
         },
     }
 
+
 def md1(lam, mu):
     if lam >= mu:
-        return {"error": "Sistem tidak stabil: lambda harus < mu"}
+        return {"error": "Sistem tidak stabil: λ harus < μ."}
     rho = lam / mu
     Lq = rho**2 / (2 * (1 - rho))
     Wq = Lq / lam
@@ -117,20 +129,20 @@ def md1(lam, mu):
         "model": "M/D/1", "rho": rho, "P0": 1 - rho,
         "L": L, "Lq": Lq, "W": W, "Wq": Wq,
         "detail": {
-            "Catatan": "Waktu layanan konstan (sigma = 0)",
-            "Lq M/D/1 = 0.5 x Lq M/M/1": True,
+            "Catatan": "Waktu layanan konstan (σ = 0)",
+            "Keunggulan": "Lq hanya setengah dari M/M/1",
         },
     }
 
+
 def cost_analysis(result, c_wait, c_server):
     model = result["model"]
+    c = 1
     if model.startswith("M/M/") and "/K" not in model and model != "M/M/1":
         try:
             c = int(model.split("/")[-1])
         except:
             c = 1
-    else:
-        c = 1
     wait_cost = c_wait * result["L"]
     server_cost = c_server * c
     return {
@@ -139,9 +151,63 @@ def cost_analysis(result, c_wait, c_server):
         "c_wait": c_wait, "c_server": c_server, "num_servers": c,
     }
 
+
+# ============================================================
+# INTERPRETASI BAHASA MANUSIA (untuk orang awam)
+# ============================================================
+def interpretasi(res, lam, mu):
+    rho = res["rho"]
+    Lq = res["Lq"]
+    Wq = res["Wq"]
+    W = res["W"]
+    model = res["model"]
+
+    # Kategori utilisasi
+    if rho < 0.5:
+        kondisi = "sangat longgar"
+        saran = "Sistem Anda masih sangat santai. Ada banyak waktu menganggur. Anda mungkin bisa mengurangi jumlah server atau menggabungkan dengan tugas lain untuk menghemat biaya."
+    elif rho < 0.7:
+        kondisi = "nyaman"
+        saran = "Sistem berjalan nyaman. Pelanggan jarang menunggu lama. Ini kondisi ideal untuk sebagian besar layanan."
+    elif rho < 0.85:
+        kondisi = "cukup sibuk"
+        saran = "Sistem cukup sibuk tapi masih terkendali. Pantau terus agar tidak naik melewati 85%."
+    elif rho < 0.95:
+        kondisi = "sangat sibuk"
+        saran = "Sistem sangat sibuk. Sedikit gangguan saja bisa membuat antrean meledak. Pertimbangkan menambah kapasitas."
+    else:
+        kondisi = "kritis"
+        saran = "Sistem berada di ambang batas. Antrean bisa meledak kapan saja. Sangat disarankan menambah server atau mengurangi laju kedatangan."
+
+    # Kategori waktu tunggu
+    if Wq < 0.05:
+        tunggu = "hampir tidak ada antrean"
+    elif Wq < 0.25:
+        tunggu = "antrean singkat"
+    elif Wq < 1:
+        tunggu = "antrean sedang"
+    elif Wq < 3:
+        tunggu = "antrean panjang"
+    else:
+        tunggu = "antrean sangat panjang"
+
+    teks = (
+        f"Model yang Anda pilih adalah {model}. Berdasarkan perhitungan, sistem Anda berada dalam kondisi "
+        f"{kondisi} dengan tingkat utilisasi {rho*100:.1f}% (artinya server sibuk sekitar {rho*100:.0f}% dari waktu). "
+        f"Rata-rata ada {Lq:.2f} pelanggan yang sedang menunggu dalam antrean, dan setiap pelanggan harus menunggu "
+        f"sekitar {Wq:.2f} satuan waktu sebelum dilayani. Total waktu yang dihabiskan pelanggan di sistem "
+        f"(menunggu + dilayani) sekitar {W:.2f} satuan waktu. Kondisi ini tergolong {tunggu}. {saran}"
+    )
+    return teks
+
+
+# ============================================================
+# ROUTE
+# ============================================================
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/api/calculate", methods=["POST"])
 def calculate():
@@ -151,7 +217,8 @@ def calculate():
         lam = float(data.get("lam", 0))
         mu = float(data.get("mu", 0))
         if lam <= 0 or mu <= 0:
-            return jsonify({"error": "lambda dan mu harus > 0"})
+            return jsonify({"error": "λ dan μ harus lebih besar dari 0."})
+
         if model == "mm1":
             res = mm1(lam, mu)
         elif model == "mmc":
@@ -163,9 +230,14 @@ def calculate():
         elif model == "md1":
             res = md1(lam, mu)
         else:
-            return jsonify({"error": "Model tidak dikenal"})
+            return jsonify({"error": "Model tidak dikenal."})
+
         if "error" in res:
             return jsonify(res)
+
+        # Tambahkan interpretasi bahasa manusia
+        res["interpretasi"] = interpretasi(res, lam, mu)
+
         cw, cs = data.get("c_wait"), data.get("c_server")
         if cw and cs:
             try:
@@ -175,6 +247,7 @@ def calculate():
         return jsonify(res)
     except Exception as e:
         return jsonify({"error": f"Kesalahan: {str(e)}"})
+
 
 @app.route("/api/compare", methods=["POST"])
 def compare():
@@ -200,6 +273,7 @@ def compare():
         return jsonify({"rows": rows})
     except Exception as e:
         return jsonify({"error": str(e)})
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
