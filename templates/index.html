@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queueing Theory Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header {
+    text-align: center; color: white; margin-bottom: 25px;
+  }
+  header h1 { font-size: 2.2rem; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 0.95rem; }
+
+  .card {
+    background: white; border-radius: 14px; padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 20px;
+  }
+  h2 { color: #4a3f8f; font-size: 1.2rem; margin-bottom: 15px;
+       border-left: 4px solid #667eea; padding-left: 10px; }
+
+  label { display: block; font-weight: 600; margin-bottom: 6px;
+          font-size: 0.9rem; color: #555; }
+  input, select {
+    width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0;
+    border-radius: 8px; font-size: 0.95rem; transition: border 0.2s;
+    margin-bottom: 14px; font-family: inherit;
+  }
+  input:focus, select:focus {
+    outline: none; border-color: #667eea;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+  button {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; padding: 12px 24px;
+    border-radius: 8px; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+  button:hover { transform: translateY(-2px);
+                 box-shadow: 0 6px 18px rgba(102,126,234,0.5); }
+  button:active { transform: translateY(0); }
+
+  .result { display: none; }
+  .result.show { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); }
+                      to { opacity: 1; transform: translateY(0); } }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+             gap: 12px; margin-bottom: 15px; }
+  .metric {
+    background: #f5f7ff; padding: 14px; border-radius: 10px;
+    border-left: 4px solid #667eea;
+  }
+  .metric .label { font-size: 0.75rem; color: #666;
+                   text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric .value { font-size: 1.3rem; font-weight: 700; color: #4a3f8f;
+                   margin-top: 4px; }
+
+  .error {
+    background: #ffe5e5; color: #c0392b; padding: 14px;
+    border-radius: 8px; border-left: 4px solid #c0392b;
+    font-weight: 600;
+  }
+  .detail-list { list-style: none; }
+  .detail-list li {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 0.9rem;
+  }
+  .detail-list li:last-child { border-bottom: none; }
+  .detail-list b { color: #4a3f8f; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { padding: 10px; text-align: center; border-bottom: 1px solid #eee;
+           font-size: 0.9rem; }
+  th { background: #f5f7ff; color: #4a3f8f; font-weight: 700; }
+
+  .badge {
+    display: inline-block; background: #667eea; color: white;
+    padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;
+    font-weight: 600; margin-bottom: 12px;
+  }
+  .hint { font-size: 0.8rem; color: #888; margin-top: -8px;
+          margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🎯 Queueing Theory Calculator</h1>
+    <p>Selesaikan persoalan teori antrean: M/M/1 · M/M/c · M/M/1/K · M/G/1 · M/D/1</p>
+  </header>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <h2>Input Parameter</h2>
+
+    <label>Model Antrean</label>
+    <select id="model" onchange="updateFields()">
+      <option value="mm1">M/M/1 — Single server</option>
+      <option value="mmc">M/M/c — Multi server</option>
+      <option value="mm1k">M/M/1/K — Kapasitas terbatas</option>
+      <option value="mg1">M/G/1 — Waktu layanan umum</option>
+      <option value="md1">M/D/1 — Waktu layanan konstan</option>
+    </select>
+
+    <div class="grid2">
+      <div>
+        <label>λ (laju kedatangan rata-rata)</label>
+        <input type="number" id="lam" value="4" step="0.01" min="0.01">
+      </div>
+      <div>
+        <label>μ (laju pelayanan per server)</label>
+        <input type="number" id="mu" value="6" step="0.01" min="0.01">
+      </div>
+    </div>
+
+    <div id="extraFields"></div>
+
+    <div class="grid2">
+      <div>
+        <label>C<sub>w</sub> — biaya tunggu / unit waktu (opsional)</label>
+        <input type="number" id="c_wait" placeholder="misal: 50" step="0.01">
+      </div>
+      <div>
+        <label>C<sub>s</sub> — biaya per server / unit waktu (opsional)</label>
+        <input type="number" id="c_server" placeholder="misal: 100" step="0.01">
+      </div>
+    </div>
+
+    <button onclick="calculate()">Hitung Hasil</button>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="card result" id="resultCard">
+    <h2>Hasil Analisis</h2>
+    <div id="resultContent"></div>
+  </div>
+
+  <!-- COMPARE CARD -->
+  <div class="card">
+    <h2>Bandingkan M/M/1 vs M/D/1 vs M/G/1</h2>
+    <p class="hint">Menggunakan λ dan μ dari input di atas, σ = 1/μ (default).</p>
+    <button onclick="compare()">Bandingkan Model</button>
+    <div id="compareContent"></div>
+  </div>
+</div>
+
+<script>
+function updateFields() {
+  const model = document.getElementById('model').value;
+  const extra = document.getElementById('extraFields');
+  if (model === 'mmc') {
+    extra.innerHTML = `<label>c — jumlah server</label>
+      <input type="number" id="c" value="2" min="1" step="1">`;
+  } else if (model === 'mm1k') {
+    extra.innerHTML = `<label>K — kapasitas sistem</label>
+      <input type="number" id="K" value="5" min="1" step="1">`;
+  } else if (model === 'mg1') {
+    extra.innerHTML = `<label>σ — standar deviasi waktu layanan</label>
+      <input type="number" id="sigma" value="0.1" step="0.01" min="0">`;
+  } else {
+    extra.innerHTML = '';
+  }
+}
+updateFields();
+
+async function calculate() {
+  const body = {
+    model: document.getElementById('model').value,
+    lam: document.getElementById('lam').value,
+    mu: document.getElementById('mu').value,
+  };
+  const c = document.getElementById('c');
+  if (c) body.c = c.value;
+  const K = document.getElementById('K');
+  if (K) body.K = K.value;
+  const sigma = document.getElementById('sigma');
+  if (sigma) body.sigma = sigma.value;
+  const cw = document.getElementById('c_wait').value;
+  const cs = document.getElementById('c_server').value;
+  if (cw) body.c_wait = cw;
+  if (cs) body.c_server = cs;
+
+  const res = await fetch('/api/calculate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+
+  const card = document.getElementById('resultCard');
+  const out = document.getElementById('resultContent');
+  card.classList.add('show');
+
+  if (res.error) {
+    out.innerHTML = `<div class="error">⚠️ ${res.error}</div>`;
+    return;
+  }
+
+  let html = `<span class="badge">${res.model}</span>`;
+  html += `<div class="metrics">
+    <div class="metric"><div class="label">ρ (utilisasi)</div>
+      <div class="value">${res.rho.toFixed(4)}</div></div>
+    <div class="metric"><div class="label">P₀</div>
+      <div class="value">${res.P0.toFixed(4)}</div></div>
+    <div class="metric"><div class="label">L</div>
+      <div class="value">${res.L.toFixed(4)}</div></div>
+    <div class="metric"><div class="label">Lq</div>
+      <div class="value">${res.Lq.toFixed(4)}</div></div>
+    <div class="metric"><div class="label">W</div>
+      <div class="value">${res.W.toFixed(4)}</div></div>
+    <div class="metric"><div class="label">Wq</div>
+      <div class="value">${res.Wq.toFixed(4)}</div></div>
+  </div>`;
+
+  if (res.P_wait !== undefined) {
+    html += `<div class="metric" style="margin-bottom:15px">
+      <div class="label">Probabilitas pelanggan menunggu (P_wait)</div>
+      <div class="value">${(res.P_wait*100).toFixed(2)}%</div></div>`;
+  }
+  if (res.P_block !== undefined) {
+    html += `<div class="metric" style="margin-bottom:15px">
+      <div class="label">Probabilitas blocking (P_K)</div>
+      <div class="value">${(res.P_block*100).toFixed(2)}%</div></div>`;
+  }
+
+  if (res.detail) {
+    html += `<h3 style="color:#4a3f8f;margin:15px 0 8px;font-size:1rem">
+             Detail Tambahan</h3><ul class="detail-list">`;
+    for (const [k, v] of Object.entries(res.detail)) {
+      const val = typeof v === 'number' ? v.toFixed(4) : v;
+      html += `<li><span>${k}</span><b>${val}</b></li>`;
+    }
+    html += `</ul>`;
+  }
+
+  if (res.cost) {
+    html += `<h3 style="color:#4a3f8f;margin:15px 0 8px;font-size:1rem">
+             💰 Analisis Biaya</h3>
+    <div class="metrics">
+      <div class="metric"><div class="label">Waiting Cost</div>
+        <div class="value">${res.cost.waiting_cost.toFixed(2)}</div></div>
+      <div class="metric"><div class="label">Server Cost</div>
+        <div class="value">${res.cost.server_cost.toFixed(2)}</div></div>
+      <div class="metric"><div class="label">Total Cost</div>
+        <div class="value">${res.cost.total_cost.toFixed(2)}</div></div>
+    </div>`;
+  }
+
+  out.innerHTML = html;
+}
+
+async function compare() {
+  const body = {
+    lam: document.getElementById('lam').value,
+    mu: document.getElementById('mu').value,
+  };
+  const sigma = document.getElementById('sigma');
+  if (sigma) body.sigma = sigma.value;
+
+  const res = await fetch('/api/compare', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+
+  const out = document.getElementById('compareContent');
+  if (res.error) {
+    out.innerHTML = `<div class="error">⚠️ ${res.error}</div>`;
+    return;
+  }
+
+  let html = `<table>
+    <tr><th>Model</th><th>ρ</th><th>Lq</th><th>Wq</th><th>W</th></tr>`;
+  res.rows.forEach(r => {
+    html += `<tr>
+      <td><b>${r.model}</b></td>
+      <td>${r.rho.toFixed(4)}</td>
+      <td>${r.Lq.toFixed(4)}</td>
+      <td>${r.Wq.toFixed(4)}</td>
+      <td>${r.W.toFixed(4)}</td>
+    </tr>`;
+  });
+  html += `</table>
+  <p class="hint" style="margin-top:10px">
+    💡 M/D/1 selalu menghasilkan Lq lebih kecil dari M/M/1 karena waktu layanan konstan (variabilitas rendah).</p>`;
+  out.innerHTML = html;
+}
+</script>
+</body>
+</html>
