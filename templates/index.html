@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalkulator Teori Antrean - Belajar Sambil Menghitung</title>
+<title>Operation Research Calculator - Antrean, Transportasi, Penugasan</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -13,8 +13,22 @@
   }
   .container { max-width: 1100px; margin: 0 auto; }
   header { text-align: center; color: white; margin-bottom: 20px; }
-  header h1 { font-size: 1.5rem; margin-bottom: 8px; }
-  header p { opacity: 0.9; font-size: 0.85rem; }
+  header h1 { font-size: 1.4rem; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 0.82rem; }
+
+  .tabs {
+    display: flex; gap: 6px; margin-bottom: 15px; overflow-x: auto;
+    padding-bottom: 5px;
+  }
+  .tab-btn {
+    background: rgba(255,255,255,0.25); color: white; border: none;
+    padding: 10px 18px; border-radius: 10px 10px 0 0; cursor: pointer;
+    font-weight: 600; font-size: 0.85rem; white-space: nowrap;
+    transition: background 0.2s; font-family: inherit;
+  }
+  .tab-btn.active { background: white; color: #4a3f8f; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
   .card {
     background: white; border-radius: 14px; padding: 20px;
@@ -23,8 +37,9 @@
   h2 { color: #4a3f8f; font-size: 1.1rem; margin-bottom: 15px;
        border-left: 4px solid #667eea; padding-left: 10px; }
   h3 { color: #4a3f8f; margin: 15px 0 8px; font-size: 0.95rem; }
-  h4 { color: #4a3f8f; margin: 12px 0 6px; font-size: 0.9rem; }
   p { margin-bottom: 10px; font-size: 0.9rem; }
+  ul, ol { margin: 8px 0 12px 22px; font-size: 0.88rem; }
+  li { margin-bottom: 4px; }
 
   label { display: block; font-weight: 600; margin-bottom: 6px;
           font-size: 0.85rem; color: #555; }
@@ -35,14 +50,19 @@
   }
   input:focus, select:focus { outline: none; border-color: #667eea; background: white; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; gap: 0; } }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .grid2, .grid3 { grid-template-columns: 1fr; gap: 0; } }
   button {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white; border: none; padding: 13px 24px;
-    border-radius: 8px; font-size: 1rem; font-weight: 600;
-    cursor: pointer; width: 100%; transition: transform 0.15s;
+    color: white; border: none; padding: 12px 22px;
+    border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; width: 100%; transition: transform 0.15s; margin-bottom: 8px;
   }
   button:hover { transform: translateY(-2px); }
+  .btn-secondary {
+    background: #f0f0ff; color: #4a3f8f; padding: 8px 14px;
+    font-size: 0.85rem; width: auto; margin-right: 6px;
+  }
 
   .result { display: none; }
   .result.show { display: block; animation: fadeIn 0.3s; }
@@ -66,18 +86,15 @@
   }
   .info-box {
     background: #e8f4fd; border-left: 4px solid #3498db;
-    padding: 14px; border-radius: 8px; margin-bottom: 15px;
-    font-size: 0.9rem;
+    padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.88rem;
   }
   .success-box {
     background: #e8f8ef; border-left: 4px solid #27ae60;
-    padding: 14px; border-radius: 8px; margin-bottom: 15px;
-    font-size: 0.9rem;
+    padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.88rem;
   }
   .warning-box {
     background: #fef5e7; border-left: 4px solid #f39c12;
-    padding: 14px; border-radius: 8px; margin-bottom: 15px;
-    font-size: 0.9rem;
+    padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.88rem;
   }
   .esai-box {
     background: #fdfbff; border: 1px solid #e8e0f5;
@@ -101,6 +118,7 @@
   table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; }
   th, td { padding: 8px 5px; text-align: center; border-bottom: 1px solid #eee; }
   th { background: #f5f7ff; color: #4a3f8f; font-weight: 700; }
+  td.highlight { background: #e8f8ef; font-weight: 700; color: #27ae60; }
 
   .badge {
     display: inline-block; background: #667eea; color: white;
@@ -131,449 +149,547 @@
   .formula {
     background: #2d2d44; color: #fff; padding: 12px 16px;
     border-radius: 8px; font-family: 'Courier New', monospace;
-    font-size: 0.85rem; margin: 10px 0; overflow-x: auto;
+    font-size: 0.82rem; margin: 10px 0; overflow-x: auto;
     text-align: center;
   }
 
-  .emoji { font-size: 1.1rem; margin-right: 6px; }
+  .matrix-input {
+    display: grid; gap: 6px; margin-bottom: 12px;
+  }
+  .matrix-input input {
+    margin-bottom: 0; text-align: center; padding: 8px 4px;
+    font-size: 0.85rem;
+  }
+  .row-label {
+    font-size: 0.75rem; font-weight: 700; color: #4a3f8f;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .steps-list { font-size: 0.85rem; }
+  .steps-list li { margin-bottom: 6px; }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>🎯 Kalkulator Teori Antrean</h1>
-    <p>Belajar Sambil Menghitung - untuk Mahasiswa, Praktisi, dan Orang Awam</p>
+    <h1>🧠 Operation Research Calculator</h1>
+    <p>Antrean · Transportasi · Penugasan — Belajar Sambil Menghitung</p>
   </header>
 
-  <!-- ============================================== -->
-  <!-- BAGIAN EDUKASI: APA ITU TEORI ANTREAN? -->
-  <!-- ============================================== -->
-  <div class="card">
-    <h2>📖 Apa Itu Teori Antrean? (Penjelasan untuk Awam)</h2>
+  <!-- ========== TABS ========== -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('queue')">🎯 Teori Antrean</button>
+    <button class="tab-btn" onclick="switchTab('transport')">🚚 Teori Transportasi</button>
+    <button class="tab-btn" onclick="switchTab('assignment')">👷 Teori Penugasan</button>
+  </div>
 
-    <div class="esai-box">
-      <p>
-        <b>Bayangkan Anda sedang mengantre di kasir supermarket.</b> Kadang antrean cepat habis,
-        kadang mengular panjang. Kenapa bisa begitu? Inilah yang dipelajari oleh <b>teori antrean</b>.
-      </p>
-      <p>
-        Teori antrean adalah cabang matematika terapan yang mempelajari bagaimana orang (atau benda)
-        mengantre untuk mendapatkan layanan. Tujuannya bukan menghilangkan antrean sepenuhnya
-        (karena itu tidak mungkin), tetapi <b>menemukan keseimbangan yang paling masuk akal</b>
-        antara biaya menyediakan layanan dan biaya waktu yang dihabiskan orang untuk menunggu.
-      </p>
-      <p>
-        Dalam dunia nyata, teori antrean dipakai untuk menjawab pertanyaan seperti:
-      </p>
-      <ul style="margin: 8px 0 12px 20px; font-size: 0.88rem;">
-        <li>Berapa jumlah kasir yang ideal di supermarket?</li>
-        <li>Berapa tempat tidur yang dibutuhkan rumah sakit?</li>
-        <li>Berapa kapasitas jalur di bandara agar penumpang tidak menunggu terlalu lama?</li>
-        <li>Berapa bandwidth internet yang cukup untuk melayani pelanggan?</li>
-        <li>Berapa banyak teller bank yang perlu dibuka di jam sibuk?</li>
+  <!-- ===================================================== -->
+  <!-- ============ TAB 1: TEORI ANTREAN ==================== -->
+  <!-- ===================================================== -->
+  <div class="tab-content active" id="tab-queue">
+
+    <div class="card">
+      <h2>📖 Apa Itu Teori Antrean? (Penjelasan untuk Awam)</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda sedang mengantre di kasir supermarket.</b> Kadang antrean cepat habis, kadang mengular panjang. Kenapa bisa begitu? Inilah yang dipelajari oleh <b>teori antrean</b>.</p>
+        <p>Teori antrean adalah cabang matematika terapan yang mempelajari bagaimana orang (atau benda) mengantre untuk mendapatkan layanan. Tujuannya bukan menghilangkan antrean sepenuhnya (karena itu tidak mungkin), tetapi <b>menemukan keseimbangan yang paling masuk akal</b> antara biaya menyediakan layanan dan biaya waktu yang dihabiskan orang untuk menunggu.</p>
+        <p>Dalam dunia nyata, teori antrean dipakai untuk menjawab: Berapa jumlah kasir ideal di supermarket? Berapa tempat tidur yang dibutuhkan rumah sakit? Berapa bandwidth internet yang cukup? Berapa teller bank di jam sibuk?</p>
+        <p>Inti teori antrean sederhana: <b>jika kedatangan lebih cepat daripada pelayanan, antrean akan menumpuk</b>. Karena kedatangan dan pelayanan bersifat <b>acak</b>, teori antrean membantu memperkirakan seberapa besar kemungkinan antrean panjang terjadi.</p>
+      </div>
+      <div class="analogy">
+        <b>Analogi ember bocor:</b> Bayangkan Anda menuang air ke ember bocor. Jika air masuk (kedatangan) lebih cepat daripada air keluar (pelayanan), ember akan penuh. Teori antrean menghitung: berapa besar ember, seberapa besar lubang, dan seberapa cepat air masuk, agar ember tidak meluap.
+      </div>
+
+      <h3>🔑 Tiga Komponen Utama Sistem Antrean</h3>
+      <div class="accordion"><div class="accordion-header">1. Proses Kedatangan (Arrival Process)</div><div class="accordion-body"><p>Ini adalah pola kedatangan pelanggan. Dalam banyak kasus nyata, kedatangan bersifat <b>acak</b> dan dimodelkan dengan <b>distribusi Poisson</b> dengan laju rata-rata <b>λ (lambda)</b>. Contoh: rata-rata 4 pelanggan datang per jam, berarti λ = 4/jam.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Mekanisme Pelayanan (Service Mechanism)</div><div class="accordion-body"><p>Ini mencakup <b>jumlah server</b> (c) dan <b>kecepatan layanan</b> (μ, mu). Waktu layanan juga sering acak, mengikuti <b>distribusi eksponensial</b>. Contoh: μ = 6 per jam berarti rata-rata satu pelanggan dilayani 10 menit.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Disiplin Antrean (Queue Discipline)</div><div class="accordion-body"><p>Aturan siapa dilayani dulu: <b>FIFO</b> (yang datang duluan dilayani duluan), <b>LIFO</b> (terakhir dilayani duluan), atau <b>Prioritas</b> (gawat darurat dilayani dulu). Kalkulator ini menggunakan FIFO.</p></div></div>
+
+      <h3>📐 Notasi Kendall: "Bahasa Sandi" Model Antrean</h3>
+      <div class="formula">A / B / C</div>
+      <ul>
+        <li><b>A</b> = Pola kedatangan (<b>M</b>=acak/Poisson, <b>D</b>=tetap, <b>G</b>=umum)</li>
+        <li><b>B</b> = Pola pelayanan (sama: M, D, atau G)</li>
+        <li><b>C</b> = Jumlah server (1, 2, 3, ... atau c untuk "banyak")</li>
       </ul>
-      <p>
-        Inti dari teori antrean sangat sederhana: <b>jika kedatangan lebih cepat daripada pelayanan,
-        antrean akan menumpuk</b>. Jika pelayanan lebih cepat, tidak ada antrean. Masalahnya, kedatangan
-        dan pelayanan bersifat <b>acak</b> — kadang sepi, kadang ramai. Teori antrean membantu kita
-        memperkirakan seberapa besar kemungkinan antrean panjang terjadi, dan seberapa banyak sumber
-        daya yang perlu disiapkan.
-      </p>
+
+      <h3>💡 Istilah Penting</h3>
+      <div class="accordion"><div class="accordion-header">ρ (rho) — Utilisasi Server</div><div class="accordion-body"><p>Persentase waktu server sibuk (0–100%). Jika ρ ≥ 1, sistem tidak stabil. Idealnya ρ di kisaran 0.6–0.8.</p></div></div>
+      <div class="accordion"><div class="accordion-header">L dan Lq — Jumlah Pelanggan</div><div class="accordion-body"><p><b>L</b> = rata-rata jumlah di seluruh sistem. <b>Lq</b> = rata-rata yang menunggu di antrean saja.</p></div></div>
+      <div class="accordion"><div class="accordion-header">W dan Wq — Waktu Tunggu</div><div class="accordion-body"><p><b>W</b> = rata-rata waktu total di sistem. <b>Wq</b> = rata-rata waktu menunggu saja.</p></div></div>
+      <div class="accordion"><div class="accordion-header">Hukum Little: L = λ × W</div><div class="accordion-body"><p>Hubungan fundamental: jumlah rata-rata di sistem = laju kedatangan × waktu rata-rata di sistem. Berlaku hampir untuk semua sistem antrean.</p></div></div>
+
+      <div class="warning-box"><b>💡 Cara Menggunakan:</b> Isi λ dan μ, pilih model, klik "Hitung". Anda akan melihat angka + penjelasan dalam bahasa manusia.</div>
     </div>
 
-    <div class="analogy">
-      <b>Analogi sederhana:</b> Bayangkan Anda menuang air ke dalam ember yang bocor.
-      Jika air masuk (kedatangan) lebih cepat daripada air keluar (pelayanan), ember akan penuh.
-      Teori antrean adalah cara matematis untuk menghitung: berapa besar ember yang dibutuhkan,
-      seberapa besar lubangnya, dan seberapa cepat air masuk, agar ember tidak meluap.
-    </div>
-
-    <h3>🔑 Tiga Komponen Utama Sistem Antrean</h3>
-    <p>Setiap sistem antrean, dari kasir sampai rumah sakit, terdiri dari tiga bagian:</p>
-
-    <div class="accordion">
-      <div class="accordion-header">1. Proses Kedatangan (Arrival Process)</div>
-      <div class="accordion-body">
-        <p>
-          Ini adalah <b>pola kedatangan pelanggan</b>. Dalam banyak kasus nyata, kedatangan bersifat
-          <b>acak dan tidak bisa diprediksi</b>. Misalnya, pelanggan restoran datang kapan saja, tidak
-          mungkin dijadwalkan serapi mungkin. Pola acak seperti ini biasanya dimodelkan dengan
-          <b>distribusi Poisson</b>, di mana kedatangan terjadi secara independen satu sama lain
-          dengan laju rata-rata tertentu (dilambangkan dengan <b>λ</b>, huruf Yunani "lambda").
-        </p>
-        <p>
-          <b>Contoh:</b> Jika rata-rata ada 4 pelanggan datang per jam, maka λ = 4 per jam.
-          Artinya, kadang 0 pelanggan datang, kadang 8 pelanggan datang dalam satu jam —
-          tapi rata-ratanya 4.
-        </p>
+    <div class="card">
+      <h2>🧮 Kalkulator Antrean</h2>
+      <label>Model Antrean</label>
+      <select id="model" onchange="updateFields()">
+        <option value="mm1">M/M/1 — Satu server (paling dasar)</option>
+        <option value="mmc">M/M/c — Beberapa server paralel</option>
+        <option value="mm1k">M/M/1/K — Kapasitas terbatas</option>
+        <option value="mg1">M/G/1 — Waktu layanan umum</option>
+        <option value="md1">M/D/1 — Waktu layanan konstan</option>
+      </select>
+      <div class="grid2">
+        <div><label>λ (lambda) — laju kedatangan</label><input type="number" id="lam" value="4" step="0.01" min="0.01"><p class="hint">misal: 4 pelanggan per jam</p></div>
+        <div><label>μ (mu) — laju pelayanan per server</label><input type="number" id="mu" value="6" step="0.01" min="0.01"><p class="hint">misal: 6 pelanggan per jam per server</p></div>
       </div>
-    </div>
-
-    <div class="accordion">
-      <div class="accordion-header">2. Mekanisme Pelayanan (Service Mechanism)</div>
-      <div class="accordion-body">
-        <p>
-          Ini adalah <b>bagaimana pelanggan dilayani</b>. Ada dua hal penting di sini:
-        </p>
-        <ul style="margin: 8px 0 10px 20px; font-size: 0.88rem;">
-          <li><b>Jumlah server:</b> Berapa banyak pelayan/kasir/loket yang tersedia? Satu kasir?
-              Lima kasir? Ini dilambangkan dengan <b>c</b>.</li>
-          <li><b>Kecepatan layanan:</b> Berapa lama rata-rata waktu untuk melayani satu pelanggan?
-              Ini dilambangkan dengan <b>μ</b> (huruf Yunani "mu").</li>
-        </ul>
-        <p>
-          Waktu layanan juga sering kali bersifat acak — kadang pelanggan cepat dilayani, kadang
-          lama. Karena itu, dalam model yang paling umum (<b>M/M/1</b>), waktu layanan diasumsikan
-          mengikuti <b>distribusi eksponensial</b>.
-        </p>
-        <p>
-          <b>Contoh:</b> Jika rata-rata satu kasir bisa melayani 6 pelanggan per jam, maka μ = 6 per jam.
-          Artinya, rata-rata satu pelanggan dilayani dalam 10 menit.
-        </p>
+      <div id="extraFields"></div>
+      <div class="grid2">
+        <div><label>Cw — biaya tunggu (opsional)</label><input type="number" id="c_wait" placeholder="misal: 50" step="0.01"></div>
+        <div><label>Cs — biaya per server (opsional)</label><input type="number" id="c_server" placeholder="misal: 100" step="0.01"></div>
       </div>
+      <button onclick="calculateQueue()">Hitung Hasil</button>
     </div>
 
-    <div class="accordion">
-      <div class="accordion-header">3. Disiplin Antrean (Queue Discipline)</div>
-      <div class="accordion-body">
-        <p>
-          Ini adalah <b>aturan siapa yang dilayani lebih dulu</b>. Beberapa aturan umum:
-        </p>
-        <ul style="margin: 8px 0 10px 20px; font-size: 0.88rem;">
-          <li><b>FIFO (First In, First Out):</b> Yang datang duluan, dilayani duluan.
-              Ini yang paling umum — seperti di kasir supermarket.</li>
-          <li><b>LIFO (Last In, First Out):</b> Yang datang terakhir, dilayani duluan.
-              Contoh: tumpukan piring di restoran.</li>
-          <li><b>Priority:</b> Yang punya prioritas lebih tinggi dilayani duluan.
-              Contoh: pasien gawat darurat di rumah sakit dilayani sebelum pasien flu.</li>
-        </ul>
-        <p>
-          Kalkulator ini menggunakan asumsi <b>FIFO</b> untuk semua model, karena paling umum
-          dan paling mudah dipahami.
-        </p>
-      </div>
+    <div class="card result" id="resultCardQueue">
+      <h2>📊 Hasil Analisis Antrean</h2>
+      <div id="resultContentQueue"></div>
     </div>
 
-    <h3>📐 Notasi Kendall: "Bahasa Sandi" Model Antrean</h3>
-    <p>
-      Para ahli menyebut model antrean dengan singkatan seperti <b>M/M/1</b> atau <b>M/M/c</b>.
-      Ini disebut <b>Notasi Kendall</b>. Berikut artinya:
-    </p>
-    <div class="formula">A / B / C</div>
-    <ul style="margin: 8px 0 12px 20px; font-size: 0.88rem;">
-      <li><b>A</b> = Pola kedatangan. <b>M</b> = Markovian/Poisson (acak), <b>D</b> = Deterministik (tetap), <b>G</b> = General (umum).</li>
-      <li><b>B</b> = Pola pelayanan. Sama seperti di atas (M, D, atau G).</li>
-      <li><b>C</b> = Jumlah server (1, 2, 3, ... atau c untuk "banyak").</li>
-    </ul>
-    <p>
-      Jadi <b>M/M/1</b> berarti: kedatangan acak (M), pelayanan acak (M), satu server (1).
-      Ini adalah model paling dasar yang cocok untuk kasir tunggal.
-    </p>
-
-    <h3>💡 Istilah Penting yang Akan Anda Temui</h3>
-    <div class="accordion">
-      <div class="accordion-header">ρ (rho) - Utilisasi Server</div>
-      <div class="accordion-body">
-        <p>
-          <b>ρ (rho)</b> adalah <b>persentase waktu server sibuk</b>. Nilainya antara 0 dan 1
-          (atau 0% sampai 100%). Jika ρ = 0.8, artinya server sibuk 80% dari waktu, dan menganggur 20%.
-        </p>
-        <p>
-          <b>Aturan praktis:</b> Jika ρ ≥ 1, sistem tidak stabil — antrean akan terus tumbuh tanpa batas.
-          Idealnya ρ berada di kisaran 0.6–0.8 untuk keseimbangan yang baik.
-        </p>
-      </div>
-    </div>
-
-    <div class="accordion">
-      <div class="accordion-header">L dan Lq - Jumlah Pelanggan</div>
-      <div class="accordion-body">
-        <p>
-          <b>L</b> = rata-rata jumlah pelanggan <b>di seluruh sistem</b> (yang menunggu + yang sedang dilayani).<br>
-          <b>Lq</b> = rata-rata jumlah pelanggan <b>yang sedang menunggu dalam antrean</b> saja.
-        </p>
-        <p>
-          <b>Contoh:</b> Jika L = 3 dan Lq = 2, artinya rata-rata ada 3 orang di sistem, di mana
-          2 di antaranya sedang menunggu dan 1 sedang dilayani.
-        </p>
-      </div>
-    </div>
-
-    <div class="accordion">
-      <div class="accordion-header">W dan Wq - Waktu Tunggu</div>
-      <div class="accordion-body">
-        <p>
-          <b>W</b> = rata-rata waktu total yang dihabiskan pelanggan <b>di dalam sistem</b>
-          (menunggu + dilayani).<br>
-          <b>Wq</b> = rata-rata waktu yang dihabiskan pelanggan <b>hanya untuk menunggu</b>.
-        </p>
-        <p>
-          <b>Contoh:</b> Jika W = 0.5 jam dan Wq = 0.3 jam, artinya pelanggan rata-rata menghabiskan
-          30 menit di sistem, di mana 18 menit di antaranya hanya untuk menunggu.
-        </p>
-      </div>
-    </div>
-
-    <div class="accordion">
-      <div class="accordion-header">Hukum Little: Hubungan Ajaib</div>
-      <div class="accordion-body">
-        <p>
-          Ada hubungan matematis yang indah antara L, W, dan λ:
-        </p>
-        <div class="formula">L = λ × W</div>
-        <p>
-          Artinya, <b>jumlah rata-rata pelanggan di sistem</b> sama dengan <b>laju kedatangan</b>
-          dikali <b>waktu rata-rata di sistem</b>. Hukum ini berlaku untuk hampir semua sistem
-          antrean, apa pun modelnya. Ini disebut <b>Hukum Little</b>, dan menjadi salah satu
-          hasil paling fundamental dalam teori antrean.
-        </p>
-        <p>
-          <b>Contoh:</b> Jika λ = 4 pelanggan/jam dan W = 0.5 jam, maka L = 4 × 0.5 = 2 pelanggan.
-          Masuk akal, bukan?
-        </p>
-      </div>
-    </div>
-
-    <h3>🎯 Model-Model yang Didukung Kalkulator Ini</h3>
-    <div class="esai-box">
-      <p><b>1. M/M/1</b> — Model paling dasar. Satu server, kedatangan acak, pelayanan acak.
-      Cocok untuk: kasir tunggal, satu teller bank, satu loket tiket.</p>
-      <p><b>2. M/M/c</b> — Beberapa server paralel. Cocok untuk: supermarket dengan banyak kasir,
-      bank dengan banyak teller, call center dengan banyak operator.</p>
-      <p><b>3. M/M/1/K</b> — Satu server dengan kapasitas terbatas. Jika antrean penuh,
-      pelanggan baru ditolak (balking). Cocok untuk: parkiran terbatas, ruang tunggu terbatas,
-      sistem dengan buffer terbatas.</p>
-      <p><b>4. M/G/1</b> — Satu server dengan waktu pelayanan yang mengikuti distribusi umum
-      (tidak harus eksponensial). Cocok untuk: layanan yang waktunya sangat bervariasi.</p>
-      <p><b>5. M/D/1</b> — Satu server dengan waktu pelayanan konstan (deterministik). Cocok
-      untuk: mesin otomatis, layanan yang waktunya selalu sama.</p>
-    </div>
-
-    <h3>💰 Trade-off Ekonomi: Menambah Server atau Membiarkan Antrean?</h3>
-    <div class="esai-box">
-      <p>
-        Inilah inti dari aplikasi teori antrean di dunia nyata. Ada dua biaya yang harus
-        diseimbangkan:
-      </p>
-      <ul style="margin: 8px 0 12px 20px; font-size: 0.88rem;">
-        <li><b>Biaya layanan (server cost):</b> Biaya menyediakan server/kasir/loket. Semakin banyak
-            server, semakin mahal.</li>
-        <li><b>Biaya tunggu (waiting cost):</b> Biaya akibat pelanggan menunggu — bisa berupa
-            hilangnya pelanggan, keluhan, atau produktivitas yang hilang.</li>
-      </ul>
-      <p>
-        Tujuannya adalah <b>meminimalkan total biaya</b>. Terkadang menambah satu server lebih murah
-        daripada membiarkan pelanggan menunggu lama. Terkadang sebaliknya. Kalkulator ini bisa
-        membantu Anda membandingkan.
-      </p>
-    </div>
-
-    <div class="warning-box">
-      <b>💡 Cara Menggunakan Kalkulator Ini:</b> Isi λ (laju kedatangan) dan μ (laju pelayanan),
-      pilih model yang sesuai, lalu klik "Hitung". Anda akan melihat angka-angka dan penjelasan
-      dalam bahasa manusia. Gunakan bagian "Bandingkan Model" untuk melihat model mana yang
-      paling efisien untuk situasi Anda.
+    <div class="card">
+      <h2>⚖️ Bandingkan Model Antrean</h2>
+      <p class="hint">M/M/1 vs M/D/1 vs M/G/1 dengan λ dan μ yang sama.</p>
+      <button onclick="compareModels()">Bandingkan</button>
+      <div id="compareContent"></div>
     </div>
   </div>
 
-  <!-- ============================================== -->
-  <!-- KALKULATOR -->
-  <!-- ============================================== -->
-  <div class="card">
-    <h2>🧮 Kalkulator Antrean</h2>
-    <label>Model Antrean</label>
-    <select id="model" onchange="updateFields()">
-      <option value="mm1">M/M/1 — Satu server (paling dasar)</option>
-      <option value="mmc">M/M/c — Beberapa server paralel</option>
-      <option value="mm1k">M/M/1/K — Kapasitas terbatas</option>
-      <option value="mg1">M/G/1 — Waktu layanan umum</option>
-      <option value="md1">M/D/1 — Waktu layanan konstan</option>
-    </select>
+  <!-- ===================================================== -->
+  <!-- ============ TAB 2: TEORI TRANSPORTASI ============== -->
+  <!-- ===================================================== -->
+  <div class="tab-content" id="tab-transport">
 
-    <div class="grid2">
-      <div>
-        <label>λ (lambda) — laju kedatangan rata-rata</label>
-        <input type="number" id="lam" value="4" step="0.01" min="0.01">
-        <p class="hint">Contoh: 4 pelanggan per jam</p>
+    <div class="card">
+      <h2>📖 Apa Itu Teori Transportasi? (Penjelasan untuk Awam)</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda punya 3 gudang dan 3 toko.</b> Setiap gudang punya stok terbatas, setiap toko punya permintaan tertentu. Biaya kirim dari setiap gudang ke setiap toko berbeda-beda. <b>Bagaimana caranya mengirim barang agar total biaya kirim paling murah?</b> Inilah masalah transportasi.</p>
+        <p>Teori transportasi adalah metode matematis untuk menemukan <b>rencana pengiriman paling efisien</b> dari beberapa sumber (supply) ke beberapa tujuan (demand), dengan mempertimbangkan biaya pengiriman per unit dan kapasitas masing-masing.</p>
+        <p>Aplikasi nyata: distribusi barang dari pabrik ke gudang, penugasan bus antar kota, distribusi air bersih, pengiriman paket e-commerce, alokasi produksi ke pasar, dan masih banyak lagi.</p>
+        <p>Tujuan akhirnya satu: <b>memenuhi semua permintaan dengan total biaya minimum</b>. Batasannya: setiap sumber tidak bisa mengirim melebihi stoknya, dan setiap tujuan harus menerima sesuai permintaannya.</p>
       </div>
-      <div>
-        <label>μ (mu) — laju pelayanan per server</label>
-        <input type="number" id="mu" value="6" step="0.01" min="0.01">
-        <p class="hint">Contoh: 6 pelanggan per jam per server</p>
+      <div class="analogy">
+        <b>Analogi:</b> Bayangkan Anda punya 3 ember air dan 3 gelas kosong. Setiap ember bisa menuang ke gelas mana saja, tapi biaya "jalan" dari ember ke gelas berbeda-beda. Tugas Anda: isi ketiga gelas dengan total biaya perjalanan air paling murah.
       </div>
+
+      <h3>🔑 Tiga Elemen Utama</h3>
+      <div class="accordion"><div class="accordion-header">1. Sumber (Supply) — Titik Asal</div><div class="accordion-body"><p>Tempat barang berasal: gudang, pabrik, depot. Masing-masing punya <b>kapasitas maksimum</b> yang bisa dikirim. Dilambangkan dengan S₁, S₂, ..., Sₘ.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Tujuan (Demand) — Titik Akhir</div><div class="accordion-body"><p>Tempat barang dibutuhkan: toko, kota, konsumen. Masing-masing punya <b>permintaan</b> yang harus dipenuhi. Dilambangkan dengan D₁, D₂, ..., Dₙ.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Biaya Transportasi per Unit</div><div class="accordion-body"><p>Biaya mengirim satu unit barang dari sumber i ke tujuan j. Ditulis sebagai matriks c[i][j]. Contoh: kirim dari Gudang 1 ke Toko 2 butuh biaya 8 ribu per unit.</p></div></div>
+
+      <h3>⚖️ Masalah Seimbang vs Tidak Seimbang</h3>
+      <div class="accordion"><div class="accordion-header">Seimbang (Balanced)</div><div class="accordion-body"><p>Jika <b>total supply = total demand</b>, semua barang terkirim dan semua permintaan terpenuhi. Solusi langsung dihitung.</p></div></div>
+      <div class="accordion"><div class="accordion-header">Tidak Seimbang (Unbalanced)</div><div class="accordion-body"><p>Jika total supply ≠ total demand, kita tambahkan <b>baris/kolom dummy</b> dengan biaya 0. Baris dummy berarti "supply palsu" (ada barang yang tidak terkirim). Kolom dummy berarti "demand palsu" (ada permintaan yang tidak terpenuhi). Ini trik standar dalam operation research.</p></div></div>
+
+      <h3>🎯 Metode yang Didukung Kalkulator Ini</h3>
+      <div class="accordion"><div class="accordion-header">1. North-West Corner (NWC) — Sudut Kiri Atas</div><div class="accordion-body"><p>Metode paling sederhana: mulai dari sel kiri atas, alokasikan sebanyak mungkin, lalu bergerak ke kanan atau ke bawah. <b>Kelebihan:</b> sangat mudah. <b>Kekurangan:</b> sering kali bukan solusi termurah, karena tidak melihat biaya.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Least Cost — Biaya Terkecil</div><div class="accordion-body"><p>Mulai dari sel dengan biaya terkecil, alokasikan sebanyak mungkin, lalu lanjut ke sel dengan biaya terkecil berikutnya. <b>Kelebihan:</b> lebih murah dari NWC. <b>Kekurangan:</b> belum tentu optimal.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Vogel's Approximation Method (VAM)</div><div class="accordion-body"><p>Metode paling canggih: menghitung "penalty" (selisih dua biaya terkecil) di setiap baris dan kolom, lalu memilih baris/kolom dengan penalty terbesar. <b>Kelebihan:</b> hampir selalu mendekati optimal. <b>Kekurangan:</b> perhitungan lebih rumit.</p></div></div>
+
+      <h3>📐 Contoh Format Masalah Transportasi</h3>
+      <div class="formula">
+        Gudang\Toko &nbsp; T1 &nbsp; T2 &nbsp; T3 &nbsp;| Supply<br>
+        G1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 &nbsp;&nbsp; 8 &nbsp;&nbsp; 8 &nbsp;&nbsp;| 50<br>
+        G2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 16 &nbsp; 24 &nbsp; 16 &nbsp;| 60<br>
+        G3 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8 &nbsp;&nbsp; 16 &nbsp; 24 &nbsp;| 30<br>
+        ------------------------<br>
+        Demand &nbsp;&nbsp; 40 &nbsp; 60 &nbsp; 40 &nbsp;| 140
+      </div>
+      <p>Artinya: Gudang 1 punya 50 unit, mengirim ke Toko 1 biayanya 4 per unit, ke Toko 2 biayanya 8, dst. Toko 1 butuh 40 unit, Toko 2 butuh 60, Toko 3 butuh 40.</p>
+
+      <div class="warning-box"><b>💡 Cara Menggunakan:</b> Isi jumlah sumber dan tujuan, lalu masukkan matriks biaya, supply, dan demand. Pilih metode, klik "Hitung". Anda akan melihat alokasi optimal dan total biaya.</div>
     </div>
 
-    <div id="extraFields"></div>
+    <div class="card">
+      <h2>🚚 Kalkulator Transportasi</h2>
+      <div class="grid2">
+        <div><label>Jumlah Sumber (Gudang)</label><input type="number" id="t_sources" value="3" min="2" max="6" onchange="buildTransportMatrix()"></div>
+        <div><label>Jumlah Tujuan (Toko)</label><input type="number" id="t_dest" value="3" min="2" max="6" onchange="buildTransportMatrix()"></div>
+      </div>
+      <label>Metode Solusi Awal</label>
+      <select id="t_method">
+        <option value="nwc">North-West Corner (paling mudah)</option>
+        <option value="least_cost">Least Cost (biaya terkecil)</option>
+        <option value="vam">Vogel's Approximation (paling akurat)</option>
+      </select>
 
-    <div class="grid2">
-      <div>
-        <label>Cw — biaya tunggu per pelanggan (opsional)</label>
-        <input type="number" id="c_wait" placeholder="misal: 50" step="0.01">
-      </div>
-      <div>
-        <label>Cs — biaya per server (opsional)</label>
-        <input type="number" id="c_server" placeholder="misal: 100" step="0.01">
-      </div>
+      <h3>Matriks Biaya (baris=sumber, kolom=tujuan)</h3>
+      <div id="t_cost_matrix" class="matrix-input"></div>
+
+      <h3>Supply & Demand</h3>
+      <div id="t_supply_demand" class="matrix-input"></div>
+
+      <button onclick="calculateTransport()">Hitung Transportasi</button>
+      <button class="btn-secondary" onclick="loadTransportExample()">Muat Contoh</button>
     </div>
 
-    <button onclick="calculate()">Hitung Hasil</button>
+    <div class="card result" id="resultCardTransport">
+      <h2>📊 Hasil Analisis Transportasi</h2>
+      <div id="resultContentTransport"></div>
+    </div>
   </div>
 
-  <!-- HASIL -->
-  <div class="card result" id="resultCard">
-    <h2>📊 Hasil Analisis</h2>
-    <div id="resultContent"></div>
-  </div>
+  <!-- ===================================================== -->
+  <!-- ============ TAB 3: TEORI PENUGASAN ================= -->
+  <!-- ===================================================== -->
+  <div class="tab-content" id="tab-assignment">
 
-  <!-- BANDINGKAN -->
-  <div class="card">
-    <h2>⚖️ Bandingkan Model</h2>
-    <p class="hint">M/M/1 vs M/D/1 vs M/G/1 dengan λ dan μ yang sama. Berguna untuk melihat model mana yang paling efisien.</p>
-    <button onclick="compare()">Bandingkan</button>
-    <div id="compareContent"></div>
+    <div class="card">
+      <h2>📖 Apa Itu Teori Penugasan? (Penjelasan untuk Awam)</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda punya 3 karyawan dan 3 tugas.</b> Setiap karyawan punya keahlian berbeda, sehingga waktu/ biaya menyelesaikan setiap tugas berbeda-beda. <b>Bagaimana caranya menugaskan agar total biaya paling murah?</b> Inilah masalah penugasan.</p>
+        <p>Teori penugasan adalah kasus khusus teori transportasi di mana <b>setiap sumber (pekerja) hanya boleh mengerjakan satu tugas</b>, dan <b>setiap tugas hanya boleh dikerjakan satu pekerja</b>. Tujuannya: menemukan pasangan optimal yang meminimalkan total biaya (atau waktu, atau memaksimalkan keuntungan).</p>
+        <p>Aplikasi nyata: menugaskan salesman ke wilayah, menugaskan mesin ke pekerjaan, menugaskan dosen ke mata kuliah, menugaskan supir ke rute, menugaskan tim ke proyek, dan masih banyak lagi.</p>
+        <p>Kuncinya: <b>solusi harus satu-satu (one-to-one)</b>. Tidak boleh ada pekerja yang mengerjakan dua tugas sekaligus, dan tidak boleh ada tugas yang dikerjakan dua pekerja.</p>
+      </div>
+      <div class="analogy">
+        <b>Analogi:</b> Bayangkan Anda punya 3 kunci dan 3 pintu. Setiap kunci bisa membuka pintu mana saja, tapi butuh waktu berbeda. Tugas Anda: pasangkan kunci ke pintu agar total waktu membuka semua pintu paling singkat.
+      </div>
+
+      <h3>🔑 Karakteristik Masalah Penugasan</h3>
+      <div class="accordion"><div class="accordion-header">1. Matriks Persegi (n×n)</div><div class="accordion-body"><p>Jumlah pekerja = jumlah tugas. Jika tidak sama, tambahkan <b>baris/kolom dummy</b> dengan biaya 0. Contoh: 3 pekerja, 4 tugas → tambah 1 pekerja dummy (artinya tugas ke-4 tidak dikerjakan siapa pun, atau dikerjakan "pekerja maya").</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. One-to-One Assignment</div><div class="accordion-body"><p>Setiap baris dipasangkan tepat ke satu kolom, dan setiap kolom dipasangkan tepat ke satu baris. Ini yang membedakan dari transportasi biasa.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Tujuan: Minimasi Total Biaya</div><div class="accordion-body"><p>Solusi dikatakan optimal jika total biaya penugasan paling kecil di antara semua kemungkinan pasangan. Untuk n kecil, bisa dicoba semua n! kemungkinan. Untuk n besar, perlu algoritma khusus.</p></div></div>
+
+      <h3>🎯 Metode Hungarian (Kuhn-Munkres)</h3>
+      <div class="esai-box">
+        <p><b>Metode Hungarian</b> adalah algoritma paling terkenal untuk menyelesaikan masalah penugasan secara <b>optimal dan efisien</b>. Ditemukan oleh Harold Kuhn (1955) dan dinamai berdasarkan karya matematikawan Hungaria Dénes Kőnig.</p>
+        <p><b>Ide dasarnya sederhana:</b> jika kita mengurangkan konstanta dari setiap baris atau kolom matriks biaya, solusi optimal tidak berubah! Ini karena setiap pekerja pasti mendapat satu tugas, jadi mengurangi biaya satu baris dengan konstanta yang sama akan mengurangi total biaya dengan jumlah yang sama, apa pun pasangannya.</p>
+        <p><b>Langkah-langkahnya:</b></p>
+        <ol>
+          <li>Kurangi setiap elemen baris dengan minimum baris itu.</li>
+          <li>Kurangi setiap elemen kolom dengan minimum kolom itu.</li>
+          <li>Cari penugasan independen menggunakan nol. Jika ada penugasan sempurna, selesai.</li>
+          <li>Jika belum, tutup semua nol dengan garis horizontal/vertikal minimum.</li>
+          <li>Cari nilai minimum yang tidak tertutup, kurangi semua yang tidak tertutup, tambahkan di intersection garis.</li>
+          <li>Ulangi langkah 3–5 hingga penugasan sempurna ditemukan.</li>
+        </ol>
+        <p><b>Kelebihan:</b> dijamin optimal, efisien (polinomial), mudah diimplementasikan. <b>Kekurangan:</b> hanya untuk matriks persegi (harus ditambah dummy jika tidak persegi).</p>
+      </div>
+
+      <h3>📐 Contoh Format Masalah Penugasan</h3>
+      <div class="formula">
+        Pekerja\Tugas &nbsp; T1 &nbsp; T2 &nbsp; T3<br>
+        P1 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8 &nbsp;&nbsp; 4 &nbsp;&nbsp; 6<br>
+        P2 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6 &nbsp;&nbsp; 5 &nbsp;&nbsp; 9<br>
+        P3 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5 &nbsp;&nbsp; 7 &nbsp;&nbsp; 4
+      </div>
+      <p>Artinya: Pekerja 1 butuh biaya 8 untuk Tugas 1, 4 untuk Tugas 2, 6 untuk Tugas 3. Dan seterusnya. Tujuannya: pasangkan setiap pekerja ke satu tugas unik, total biaya minimum.</p>
+
+      <div class="warning-box"><b>💡 Cara Menggunakan:</b> Pilih jumlah pekerja/tugas, isi matriks biaya, klik "Hitung". Anda akan melihat pasangan optimal dan total biaya.</div>
+    </div>
+
+    <div class="card">
+      <h2>👷 Kalkulator Penugasan</h2>
+      <div class="grid2">
+        <div><label>Jumlah Pekerja = Jumlah Tugas</label><input type="number" id="a_size" value="3" min="2" max="6" onchange="buildAssignmentMatrix()"></div>
+        <div></div>
+      </div>
+      <h3>Matriks Biaya (baris=pekerja, kolom=tugas)</h3>
+      <div id="a_cost_matrix" class="matrix-input"></div>
+      <button onclick="calculateAssignment()">Hitung Penugasan</button>
+      <button class="btn-secondary" onclick="loadAssignmentExample()">Muat Contoh</button>
+    </div>
+
+    <div class="card result" id="resultCardAssignment">
+      <h2>📊 Hasil Analisis Penugasan</h2>
+      <div id="resultContentAssignment"></div>
+    </div>
   </div>
 
   <!-- FOOTER -->
   <div class="card" style="text-align:center; font-size:0.85rem; color:#666;">
-    <p>📚 Dibuat untuk pembelajaran Teori Antrean (Operation Research)</p>
-    <p style="margin-top:8px;">Model: M/M/1 · M/M/c · M/M/1/K · M/G/1 · M/D/1</p>
+    <p>📚 Dibuat untuk pembelajaran Operation Research</p>
+    <p style="margin-top:8px;">Antrean · Transportasi · Penugasan</p>
   </div>
 </div>
 
 <script>
+// ============ TAB SWITCHING ============
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
 // ============ ACCORDION ============
-document.querySelectorAll('.accordion-header').forEach(h => {
-  h.addEventListener('click', () => {
-    h.parentElement.classList.toggle('open');
-  });
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('accordion-header')) {
+    e.target.parentElement.classList.toggle('open');
+  }
 });
 
-// ============ FORM DINAMIS ============
+// ============ FORM ANTREAN ============
 function updateFields() {
   const model = document.getElementById('model').value;
   const extra = document.getElementById('extraFields');
   if (model === 'mmc') {
     extra.innerHTML = '<label>c — jumlah server</label><input type="number" id="c" value="2" min="1" step="1"><p class="hint">Berapa banyak kasir/loket/server paralel?</p>';
   } else if (model === 'mm1k') {
-    extra.innerHTML = '<label>K — kapasitas sistem</label><input type="number" id="K" value="5" min="1" step="1"><p class="hint">Total maksimal orang dalam sistem (menunggu + dilayani)</p>';
+    extra.innerHTML = '<label>K — kapasitas sistem</label><input type="number" id="K" value="5" min="1" step="1"><p class="hint">Total maksimal orang dalam sistem</p>';
   } else if (model === 'mg1') {
-    extra.innerHTML = '<label>σ (sigma) — standar deviasi waktu layanan</label><input type="number" id="sigma" value="0.1" step="0.01" min="0"><p class="hint">Seberapa bervariasi waktu layanan? 0 = selalu sama</p>';
+    extra.innerHTML = '<label>σ (sigma) — standar deviasi waktu layanan</label><input type="number" id="sigma" value="0.1" step="0.01" min="0"><p class="hint">0 = selalu sama</p>';
   } else {
     extra.innerHTML = '';
   }
 }
 updateFields();
 
-// ============ HITUNG ============
-async function calculate() {
+async function calculateQueue() {
   const body = {
     model: document.getElementById('model').value,
     lam: document.getElementById('lam').value,
     mu: document.getElementById('mu').value,
   };
-  const c = document.getElementById('c');
-  if (c) body.c = c.value;
-  const K = document.getElementById('K');
-  if (K) body.K = K.value;
-  const sigma = document.getElementById('sigma');
-  if (sigma) body.sigma = sigma.value;
-  const cw = document.getElementById('c_wait').value;
-  const cs = document.getElementById('c_server').value;
-  if (cw) body.c_wait = cw;
-  if (cs) body.c_server = cs;
+  const c = document.getElementById('c'); if (c) body.c = c.value;
+  const K = document.getElementById('K'); if (K) body.K = K.value;
+  const sigma = document.getElementById('sigma'); if (sigma) body.sigma = sigma.value;
+  const cw = document.getElementById('c_wait').value; if (cw) body.c_wait = cw;
+  const cs = document.getElementById('c_server').value; if (cs) body.c_server = cs;
 
   const res = await fetch('/api/calculate', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(body)
   }).then(r => r.json());
 
-  const card = document.getElementById('resultCard');
-  const out = document.getElementById('resultContent');
+  const card = document.getElementById('resultCardQueue');
+  const out = document.getElementById('resultContentQueue');
   card.classList.add('show');
+  card.scrollIntoView({behavior: 'smooth', block: 'start'});
 
-  if (res.error) {
-    out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>';
-    return;
-  }
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
 
   let html = '<span class="badge">' + res.model + '</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan Bahasa Manusia:</b><br>' + res.interpretasi + '</div>';
 
-  // Interpretasi bahasa manusia
-  if (res.interpretasi) {
-    html += '<div class="success-box"><b>💬 Penjelasan dalam Bahasa Manusia:</b><br>' + res.interpretasi + '</div>';
-  }
-
-  // Metrik
-  html += '<h3>Angka-Angka Hasil Perhitungan</h3>';
-  html += '<div class="metrics">' +
+  html += '<h3>Angka-Angka Hasil</h3><div class="metrics">' +
     '<div class="metric"><div class="label">ρ utilisasi</div><div class="value">' + res.rho.toFixed(4) + '</div></div>' +
-    '<div class="metric"><div class="label">P₀ (sistem kosong)</div><div class="value">' + res.P0.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">P₀ sistem kosong</div><div class="value">' + res.P0.toFixed(4) + '</div></div>' +
     '<div class="metric"><div class="label">L</div><div class="value">' + res.L.toFixed(4) + '</div></div>' +
     '<div class="metric"><div class="label">Lq</div><div class="value">' + res.Lq.toFixed(4) + '</div></div>' +
     '<div class="metric"><div class="label">W</div><div class="value">' + res.W.toFixed(4) + '</div></div>' +
-    '<div class="metric"><div class="label">Wq</div><div class="value">' + res.Wq.toFixed(4) + '</div></div>' +
-    '</div>';
+    '<div class="metric"><div class="label">Wq</div><div class="value">' + res.Wq.toFixed(4) + '</div></div></div>';
 
-  if (res.P_wait !== undefined) {
-    html += '<div class="info-box"><b>Peluang pelanggan harus menunggu (P_wait):</b> ' + (res.P_wait*100).toFixed(2) + '%. Artinya, dari setiap 100 pelanggan, sekitar ' + Math.round(res.P_wait*100) + ' orang akan menemukan antrean.</div>';
-  }
-  if (res.P_block !== undefined) {
-    html += '<div class="warning-box"><b>Peluang blocking (P_K):</b> ' + (res.P_block*100).toFixed(2) + '%. Artinya, sekitar ' + Math.round(res.P_block*100) + ' dari 100 pelanggan akan ditolak karena sistem penuh.</div>';
-  }
+  if (res.P_wait !== undefined) html += '<div class="info-box"><b>Peluang menunggu (P_wait):</b> ' + (res.P_wait*100).toFixed(2) + '% dari pelanggan akan menemukan antrean.</div>';
+  if (res.P_block !== undefined) html += '<div class="warning-box"><b>Peluang blocking (P_K):</b> ' + (res.P_block*100).toFixed(2) + '% pelanggan ditolak karena sistem penuh.</div>';
 
-  // Detail tambahan
   if (res.detail) {
     html += '<h3>Detail Tambahan</h3><ul class="detail-list">';
     for (const [k, v] of Object.entries(res.detail)) {
-      const val = typeof v === 'number' ? v.toFixed(4) : v;
-      html += '<li><span>' + k + '</span><b>' + val + '</b></li>';
+      html += '<li><span>' + k + '</span><b>' + (typeof v === 'number' ? v.toFixed(4) : v) + '</b></li>';
     }
     html += '</ul>';
   }
 
-  // Biaya
   if (res.cost) {
-    html += '<h3>💰 Analisis Biaya</h3>' +
-      '<div class="metrics">' +
+    html += '<h3>💰 Analisis Biaya</h3><div class="metrics">' +
       '<div class="metric"><div class="label">Biaya Tunggu</div><div class="value">' + res.cost.waiting_cost.toFixed(2) + '</div></div>' +
       '<div class="metric"><div class="label">Biaya Server</div><div class="value">' + res.cost.server_cost.toFixed(2) + '</div></div>' +
-      '<div class="metric"><div class="label">Total Biaya</div><div class="value">' + res.cost.total_cost.toFixed(2) + '</div></div>' +
-      '</div>' +
-      '<div class="info-box">Biaya tunggu = Cw × L = ' + res.cost.c_wait + ' × ' + res.L.toFixed(2) + ' = ' + res.cost.waiting_cost.toFixed(2) + '<br>' +
-      'Biaya server = Cs × c = ' + res.cost.c_server + ' × ' + res.cost.num_servers + ' = ' + res.cost.server_cost.toFixed(2) + '<br>' +
-      '<b>Total biaya yang harus Anda tanggung: ' + res.cost.total_cost.toFixed(2) + ' per satuan waktu.</b></div>';
+      '<div class="metric"><div class="label">Total Biaya</div><div class="value">' + res.cost.total_cost.toFixed(2) + '</div></div></div>' +
+      '<div class="info-box">Biaya tunggu = ' + res.cost.c_wait + ' × ' + res.L.toFixed(2) + ' = ' + res.cost.waiting_cost.toFixed(2) + '<br>Biaya server = ' + res.cost.c_server + ' × ' + res.cost.num_servers + ' = ' + res.cost.server_cost.toFixed(2) + '<br><b>Total: ' + res.cost.total_cost.toFixed(2) + ' per satuan waktu.</b></div>';
   }
+  out.innerHTML = html;
+}
+
+async function compareModels() {
+  const body = { lam: document.getElementById('lam').value, mu: document.getElementById('mu').value };
+  const sigma = document.getElementById('sigma'); if (sigma) body.sigma = sigma.value;
+  const res = await fetch('/api/compare', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}).then(r => r.json());
+  const out = document.getElementById('compareContent');
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<table><tr><th>Model</th><th>ρ</th><th>Lq</th><th>Wq</th><th>W</th></tr>';
+  res.rows.forEach(r => { html += '<tr><td><b>' + r.model + '</b></td><td>' + r.rho.toFixed(4) + '</td><td>' + r.Lq.toFixed(4) + '</td><td>' + r.Wq.toFixed(4) + '</td><td>' + r.W.toFixed(4) + '</td></tr>'; });
+  html += '</table><div class="info-box" style="margin-top:12px"><b>💡 Interpretasi:</b> M/D/1 selalu menghasilkan Lq lebih kecil dari M/M/1 karena waktu layanan konstan mengurangi ketidakpastian. Mengurangi variasi layanan bisa mengurangi antrean tanpa menambah server!</div>';
+  out.innerHTML = html;
+}
+
+// ============ FORM TRANSPORTASI ============
+function buildTransportMatrix() {
+  const ns = parseInt(document.getElementById('t_sources').value) || 3;
+  const nd = parseInt(document.getElementById('t_dest').value) || 3;
+
+  // Matriks biaya
+  let html = '<div style="display:grid;grid-template-columns: 40px repeat(' + nd + ', 1fr);gap:6px;">';
+  html += '<div></div>';
+  for (let j = 0; j < nd; j++) html += '<div class="row-label">T' + (j+1) + '</div>';
+  for (let i = 0; i < ns; i++) {
+    html += '<div class="row-label">S' + (i+1) + '</div>';
+    for (let j = 0; j < nd; j++) {
+      html += '<input type="number" id="tc_' + i + '_' + j + '" value="0" step="1">';
+    }
+  }
+  html += '</div>';
+  document.getElementById('t_cost_matrix').innerHTML = html;
+
+  // Supply & demand
+  let html2 = '<div style="display:grid;grid-template-columns: repeat(' + (nd + 1) + ', 1fr);gap:6px;">';
+  for (let i = 0; i < ns; i++) html2 += '<div><label>Supply S' + (i+1) + '</label><input type="number" id="ts_' + i + '" value="0" step="1"></div>';
+  html2 += '<div></div>';
+  for (let j = 0; j < nd; j++) html2 += '<div><label>Demand T' + (j+1) + '</label><input type="number" id="td_' + j + '" value="0" step="1"></div>';
+  html2 += '</div>';
+  document.getElementById('t_supply_demand').innerHTML = html2;
+}
+
+function loadTransportExample() {
+  document.getElementById('t_sources').value = 3;
+  document.getElementById('t_dest').value = 3;
+  buildTransportMatrix();
+  const cost = [[4,8,8],[16,24,16],[8,16,24]];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) document.getElementById('tc_'+i+'_'+j).value = cost[i][j];
+  const supply = [50,60,30];
+  const demand = [40,60,40];
+  for (let i = 0; i < 3; i++) document.getElementById('ts_'+i).value = supply[i];
+  for (let j = 0; j < 3; j++) document.getElementById('td_'+j).value = demand[j];
+}
+
+async function calculateTransport() {
+  const ns = parseInt(document.getElementById('t_sources').value);
+  const nd = parseInt(document.getElementById('t_dest').value);
+  const cost = [];
+  for (let i = 0; i < ns; i++) {
+    const row = [];
+    for (let j = 0; j < nd; j++) row.push(parseFloat(document.getElementById('tc_'+i+'_'+j).value) || 0);
+    cost.push(row);
+  }
+  const supply = [];
+  for (let i = 0; i < ns; i++) supply.push(parseFloat(document.getElementById('ts_'+i).value) || 0);
+  const demand = [];
+  for (let j = 0; j < nd; j++) demand.push(parseFloat(document.getElementById('td_'+j).value) || 0);
+  const metode = document.getElementById('t_method').value;
+
+  const res = await fetch('/api/transport', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cost, supply, demand, metode})}).then(r => r.json());
+
+  const card = document.getElementById('resultCardTransport');
+  const out = document.getElementById('resultContentTransport');
+  card.classList.add('show');
+  card.scrollIntoView({behavior: 'smooth', block: 'start'});
+
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+
+  let html = '<span class="badge">' + res.metode + '</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan Bahasa Manusia:</b><br>' + res.interpretasi + '</div>';
+
+  if (!res.balanced) {
+    html += '<div class="warning-box"><b>⚠️ Masalah Tidak Seimbang:</b> Total supply = ' + res.total_supply + ', total demand = ' + res.total_demand + '. Ditambahkan baris/kolom dummy untuk menyeimbangkan.</div>';
+  } else {
+    html += '<div class="info-box">✅ Masalah seimbang: total supply = total demand = ' + res.total_supply + '</div>';
+  }
+
+  html += '<h3>📋 Matriks Alokasi Optimal</h3>';
+  html += '<table><tr><th>Sumber \\ Tujuan</th>';
+  for (let j = 0; j < res.allocation[0].length; j++) html += '<th>T' + (j+1) + '</th>';
+  html += '<th>Supply</th></tr>';
+  for (let i = 0; i < res.allocation.length; i++) {
+    html += '<tr><td><b>S' + (i+1) + '</b></td>';
+    for (let j = 0; j < res.allocation[i].length; j++) {
+      const val = res.allocation[i][j];
+      html += '<td class="' + (val > 0 ? 'highlight' : '') + '">' + val + '</td>';
+    }
+    html += '<td>' + res.supply_used[i] + '</td></tr>';
+  }
+  html += '<tr><td><b>Demand</b></td>';
+  for (let j = 0; j < res.demand_used.length; j++) html += '<td>' + res.demand_used[j] + '</td>';
+  html += '<td></td></tr></table>';
+
+  html += '<h3>💰 Rincian Biaya</h3><ul class="detail-list">';
+  res.rincian.forEach(r => {
+    html += '<li><span>' + r.from + ' → ' + r.to + ' (' + r.qty + ' unit × ' + r.cost + ')</span><b>= ' + r.subtotal.toFixed(2) + '</b></li>';
+  });
+  html += '</ul>';
+  html += '<div class="metric" style="margin-top:12px"><div class="label">Total Biaya Transportasi</div><div class="value">' + res.total_cost.toFixed(2) + '</div></div>';
+
+  if (res.optimal) {
+    html += '<div class="success-box" style="margin-top:12px">✅ Solusi ini sudah optimal menurut uji MODI.</div>';
+  } else {
+    html += '<div class="warning-box" style="margin-top:12px">⚠️ Solusi ini belum tentu optimal. Untuk perbaikan, gunakan metode MODI/Stepping Stone.</div>';
+  }
+
+  html += '<h3>🔍 Langkah-langkah Alokasi</h3><ol class="steps-list">';
+  res.steps.forEach(s => {
+    html += '<li>' + s.from + ' → ' + s.to + ': ' + s.qty + ' unit (biaya/unit: ' + s.cost + ')</li>';
+  });
+  html += '</ol>';
 
   out.innerHTML = html;
 }
 
-// ============ BANDINGKAN ============
-async function compare() {
-  const body = {
-    lam: document.getElementById('lam').value,
-    mu: document.getElementById('mu').value,
-  };
-  const sigma = document.getElementById('sigma');
-  if (sigma) body.sigma = sigma.value;
-
-  const res = await fetch('/api/compare', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body)
-  }).then(r => r.json());
-
-  const out = document.getElementById('compareContent');
-  if (res.error) {
-    out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>';
-    return;
+// ============ FORM PENUGASAN ============
+function buildAssignmentMatrix() {
+  const n = parseInt(document.getElementById('a_size').value) || 3;
+  let html = '<div style="display:grid;grid-template-columns: 40px repeat(' + n + ', 1fr);gap:6px;">';
+  html += '<div></div>';
+  for (let j = 0; j < n; j++) html += '<div class="row-label">T' + (j+1) + '</div>';
+  for (let i = 0; i < n; i++) {
+    html += '<div class="row-label">P' + (i+1) + '</div>';
+    for (let j = 0; j < n; j++) {
+      html += '<input type="number" id="ac_' + i + '_' + j + '" value="0" step="1">';
+    }
   }
-  let html = '<table><tr><th>Model</th><th>ρ</th><th>Lq</th><th>Wq</th><th>W</th></tr>';
-  res.rows.forEach(r => {
-    html += '<tr><td><b>' + r.model + '</b></td><td>' + r.rho.toFixed(4) + '</td><td>' + r.Lq.toFixed(4) + '</td><td>' + r.Wq.toFixed(4) + '</td><td>' + r.W.toFixed(4) + '</td></tr>';
+  html += '</div>';
+  document.getElementById('a_cost_matrix').innerHTML = html;
+}
+
+function loadAssignmentExample() {
+  document.getElementById('a_size').value = 3;
+  buildAssignmentMatrix();
+  const cost = [[8,4,6],[6,5,9],[5,7,4]];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) document.getElementById('ac_'+i+'_'+j).value = cost[i][j];
+}
+
+async function calculateAssignment() {
+  const n = parseInt(document.getElementById('a_size').value);
+  const cost = [];
+  for (let i = 0; i < n; i++) {
+    const row = [];
+    for (let j = 0; j < n; j++) row.push(parseFloat(document.getElementById('ac_'+i+'_'+j).value) || 0);
+    cost.push(row);
+  }
+  const res = await fetch('/api/assignment', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cost})}).then(r => r.json());
+
+  const card = document.getElementById('resultCardAssignment');
+  const out = document.getElementById('resultContentAssignment');
+  card.classList.add('show');
+  card.scrollIntoView({behavior: 'smooth', block: 'start'});
+
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+
+  let html = '<span class="badge">Hungarian Method</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan Bahasa Manusia:</b><br>' + res.interpretasi + '</div>';
+
+  html += '<h3>🎯 Pasangan Optimal</h3><table><tr><th>Pekerja</th><th>Tugas</th><th>Biaya</th></tr>';
+  res.assignment.forEach(a => {
+    html += '<tr><td><b>' + a.worker + '</b></td><td>' + a.task + '</td><td>' + a.cost.toFixed(2) + '</td></tr>';
   });
   html += '</table>';
-  html += '<div class="info-box" style="margin-top:12px"><b>💡 Interpretasi:</b> Perhatikan kolom Lq (jumlah rata-rata yang menunggu). M/D/1 selalu menghasilkan Lq lebih kecil dari M/M/1, karena waktu layanan yang konstan mengurangi ketidakpastian. M/G/1 berada di antaranya, tergantung seberapa bervariasi waktu layanannya. Inilah mengapa <b>mengurangi variasi waktu layanan</b> (misalnya dengan prosedur standar) bisa mengurangi antrean tanpa perlu menambah server!</div>';
+  html += '<div class="metric" style="margin-top:12px"><div class="label">Total Biaya Penugasan</div><div class="value">' + res.total_cost.toFixed(2) + '</div></div>';
+
+  html += '<h3>🔍 Langkah-langkah Metode Hungarian</h3>';
+  res.steps.forEach(s => {
+    html += '<div style="margin-bottom:12px"><b>' + s.step + '</b>';
+    if (s.matrix) {
+      html += '<table style="margin-top:6px"><tr><th></th>';
+      for (let j = 0; j < s.matrix[0].length; j++) html += '<th>T' + (j+1) + '</th>';
+      html += '</tr>';
+      s.matrix.forEach((row, i) => {
+        html += '<tr><th>P' + (i+1) + '</th>';
+        row.forEach(v => { html += '<td>' + v + '</td>'; });
+        html += '</tr>';
+      });
+      html += '</table>';
+    }
+    html += '</div>';
+  });
+
   out.innerHTML = html;
 }
+
+// Initialize everything
+buildTransportMatrix();
+buildAssignmentMatrix();
 </script>
 </body>
 </html>
