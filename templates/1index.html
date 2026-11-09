@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OR Calculator - Antrean, Transportasi, Penugasan, CPM, PERT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh; padding: 15px; color: #333; line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header { text-align: center; color: white; margin-bottom: 18px; }
+  header h1 { font-size: 1.3rem; margin-bottom: 6px; }
+  header p { opacity: 0.9; font-size: 0.8rem; }
+
+  .tabs {
+    display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto;
+    padding-bottom: 5px; -webkit-overflow-scrolling: touch;
+  }
+  .tab-btn {
+    background: rgba(255,255,255,0.25); color: white; border: none;
+    padding: 9px 14px; border-radius: 10px 10px 0 0; cursor: pointer;
+    font-weight: 600; font-size: 0.78rem; white-space: nowrap;
+    transition: background 0.2s; font-family: inherit;
+  }
+  .tab-btn.active { background: white; color: #4a3f8f; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .card {
+    background: white; border-radius: 14px; padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 18px;
+  }
+  h2 { color: #4a3f8f; font-size: 1.05rem; margin-bottom: 15px;
+       border-left: 4px solid #667eea; padding-left: 10px; }
+  h3 { color: #4a3f8f; margin: 15px 0 8px; font-size: 0.92rem; }
+  p { margin-bottom: 10px; font-size: 0.88rem; }
+  ul, ol { margin: 8px 0 12px 22px; font-size: 0.86rem; }
+  li { margin-bottom: 4px; }
+
+  label { display: block; font-weight: 600; margin-bottom: 6px;
+          font-size: 0.82rem; color: #555; }
+  input, select {
+    width: 100%; padding: 9px 11px; border: 2px solid #e0e0e0;
+    border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px;
+    font-family: inherit; background: #fafafa;
+  }
+  input:focus, select:focus { outline: none; border-color: #667eea; background: white; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 600px) { .grid2, .grid3 { grid-template-columns: 1fr; gap: 0; } }
+  button {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; padding: 11px 20px;
+    border-radius: 8px; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; width: 100%; transition: transform 0.15s; margin-bottom: 8px;
+  }
+  button:hover { transform: translateY(-2px); }
+  .btn-secondary {
+    background: #f0f0ff; color: #4a3f8f; padding: 8px 14px;
+    font-size: 0.82rem; width: auto; margin-right: 6px;
+  }
+  .btn-small {
+    background: #e8f0ff; color: #4a3f8f; padding: 5px 10px;
+    font-size: 0.75rem; width: auto; margin: 0;
+  }
+
+  .result { display: none; }
+  .result.show { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); }
+                      to { opacity: 1; transform: translateY(0); } }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+             gap: 8px; margin-bottom: 12px; }
+  .metric {
+    background: #f5f7ff; padding: 10px; border-radius: 10px;
+    border-left: 4px solid #667eea;
+  }
+  .metric .label { font-size: 0.68rem; color: #666;
+                   text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric .value { font-size: 1.05rem; font-weight: 700; color: #4a3f8f;
+                   margin-top: 4px; }
+
+  .error { background: #ffe5e5; color: #c0392b; padding: 12px;
+           border-radius: 8px; border-left: 4px solid #c0392b; font-weight: 600;
+           font-size: 0.88rem; }
+  .info-box { background: #e8f4fd; border-left: 4px solid #3498db;
+              padding: 11px; border-radius: 8px; margin-bottom: 11px; font-size: 0.85rem; }
+  .success-box { background: #e8f8ef; border-left: 4px solid #27ae60;
+                 padding: 11px; border-radius: 8px; margin-bottom: 11px; font-size: 0.85rem; }
+  .warning-box { background: #fef5e7; border-left: 4px solid #f39c12;
+                 padding: 11px; border-radius: 8px; margin-bottom: 11px; font-size: 0.85rem; }
+  .esai-box { background: #fdfbff; border: 1px solid #e8e0f5;
+              padding: 14px; border-radius: 10px; margin-bottom: 14px;
+              font-size: 0.87rem; text-align: justify; }
+  .analogy { background: #fff8e1; border-left: 4px solid #ffb300;
+             padding: 11px; border-radius: 8px; margin: 11px 0;
+             font-style: italic; font-size: 0.85rem; }
+
+  .detail-list { list-style: none; }
+  .detail-list li { display: flex; justify-content: space-between; gap: 10px;
+                    padding: 7px 0; border-bottom: 1px dashed #eee; font-size: 0.83rem; }
+  .detail-list li:last-child { border-bottom: none; }
+  .detail-list b { color: #4a3f8f; text-align: right; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.78rem; }
+  th, td { padding: 7px 4px; text-align: center; border-bottom: 1px solid #eee; }
+  th { background: #f5f7ff; color: #4a3f8f; font-weight: 700; }
+  td.highlight { background: #e8f8ef; font-weight: 700; color: #27ae60; }
+  tr.critical-row td { background: #fff0f0; font-weight: 600; color: #c0392b; }
+
+  .badge { display: inline-block; background: #667eea; color: white;
+           padding: 4px 12px; border-radius: 20px; font-size: 0.78rem;
+           font-weight: 600; margin-bottom: 12px; }
+  .hint { font-size: 0.75rem; color: #888; margin-bottom: 10px; }
+
+  .accordion { background: #f5f7ff; border-radius: 10px; margin-bottom: 9px;
+               overflow: hidden; border: 1px solid #e0e0f0; }
+  .accordion-header { padding: 12px 14px; cursor: pointer; font-weight: 600;
+                      color: #4a3f8f; font-size: 0.88rem;
+                      display: flex; justify-content: space-between; align-items: center;
+                      user-select: none; }
+  .accordion-header:hover { background: #eef0ff; }
+  .accordion-header::after { content: '▼'; font-size: 0.65rem; transition: transform 0.3s; }
+  .accordion.open .accordion-header::after { transform: rotate(180deg); }
+  .accordion-body { display: none; padding: 0 14px 14px; font-size: 0.85rem;
+                    line-height: 1.7; text-align: justify; }
+  .accordion.open .accordion-body { display: block; }
+
+  .formula { background: #2d2d44; color: #fff; padding: 11px 14px;
+             border-radius: 8px; font-family: 'Courier New', monospace;
+             font-size: 0.78rem; margin: 9px 0; overflow-x: auto;
+             text-align: center; }
+
+  .matrix-input { display: grid; gap: 5px; margin-bottom: 10px; }
+  .matrix-input input { margin-bottom: 0; text-align: center; padding: 7px 4px;
+                        font-size: 0.82rem; }
+  .row-label { font-size: 0.72rem; font-weight: 700; color: #4a3f8f;
+               display: flex; align-items: center; justify-content: center; }
+
+  .activity-card { background: #f9f9ff; border: 1px solid #e0e0f0;
+                   border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .activity-card .header { display: flex; justify-content: space-between;
+                           align-items: center; margin-bottom: 8px; }
+  .activity-card .header b { color: #4a3f8f; font-size: 0.9rem; }
+
+  .steps-list { font-size: 0.82rem; }
+  .steps-list li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧠 Operation Research Calculator</h1>
+    <p>Antrean · Transportasi · Penugasan · CPM · PERT</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('queue', event)">🎯 Antrean</button>
+    <button class="tab-btn" onclick="switchTab('transport', event)">🚚 Transportasi</button>
+    <button class="tab-btn" onclick="switchTab('assignment', event)">👷 Penugasan</button>
+    <button class="tab-btn" onclick="switchTab('cpm', event)">📅 CPM</button>
+    <button class="tab-btn" onclick="switchTab('pert', event)">🎲 PERT</button>
+  </div>
+
+  <!-- ============ TAB 1: ANTREAN ============ -->
+  <div class="tab-content active" id="tab-queue">
+    <div class="card">
+      <h2>📖 Apa Itu Teori Antrean?</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda mengantre di kasir supermarket.</b> Kadang cepat, kadang mengular. Teori antrean mempelajari bagaimana orang mengantre dan bagaimana mengoptimalkannya.</p>
+        <p>Teori ini membantu menjawab: berapa kasir ideal? berapa tempat tidur rumah sakit? berapa bandwidth internet? Intinya: <b>jika kedatangan lebih cepat dari pelayanan, antrean menumpuk</b>.</p>
+      </div>
+      <div class="analogy"><b>Analogi ember bocor:</b> Air masuk (kedatangan) vs air keluar (pelayanan). Jika masuk lebih cepat, ember penuh. Teori antrean hitung ukuran ember & lubang yang pas.</div>
+      <h3>🔑 Tiga Komponen</h3>
+      <div class="accordion"><div class="accordion-header">1. Kedatangan (Poisson, λ)</div><div class="accordion-body"><p>Pola kedatangan acak dengan laju rata-rata λ. Contoh: 4 pelanggan/jam.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Pelayanan (Eksponensial, μ, c)</div><div class="accordion-body"><p>Kecepatan layanan μ per server, dengan c server. Contoh: μ=6/jam, c=1.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Disiplin (FIFO/LIFO/Priority)</div><div class="accordion-body"><p>Aturan siapa dilayani dulu. Kalkulator ini pakai FIFO (yang datang duluan dilayani duluan).</p></div></div>
+      <h3>📐 Notasi Kendall: A/B/C</h3>
+      <div class="formula">A / B / C</div>
+      <p><b>A</b>=kedatangan (M/D/G), <b>B</b>=pelayanan (M/D/G), <b>C</b>=jumlah server.</p>
+      <h3>💡 Istilah Penting</h3>
+      <div class="accordion"><div class="accordion-header">ρ (rho) — Utilisasi</div><div class="accordion-body"><p>% waktu server sibuk. ρ≥1 = tidak stabil. Ideal 0.6–0.8.</p></div></div>
+      <div class="accordion"><div class="accordion-header">L, Lq, W, Wq</div><div class="accordion-body"><p>L=jumlah di sistem, Lq=yang menunggu, W=waktu total, Wq=waktu tunggu.</p></div></div>
+      <div class="accordion"><div class="accordion-header">Hukum Little: L = λ × W</div><div class="accordion-body"><p>Hubungan fundamental yang berlaku universal.</p></div></div>
+    </div>
+
+    <div class="card">
+      <h2>🧮 Kalkulator Antrean</h2>
+      <label>Model</label>
+      <select id="model" onchange="updateFields()">
+        <option value="mm1">M/M/1 — Satu server</option>
+        <option value="mmc">M/M/c — Multi server</option>
+        <option value="mm1k">M/M/1/K — Kapasitas terbatas</option>
+        <option value="mg1">M/G/1 — Layanan umum</option>
+        <option value="md1">M/D/1 — Layanan konstan</option>
+      </select>
+      <div class="grid2">
+        <div><label>λ (kedatangan)</label><input type="number" id="lam" value="4" step="0.01" min="0.01"></div>
+        <div><label>μ (pelayanan)</label><input type="number" id="mu" value="6" step="0.01" min="0.01"></div>
+      </div>
+      <div id="extraFields"></div>
+      <div class="grid2">
+        <div><label>Cw (biaya tunggu, opsional)</label><input type="number" id="c_wait" placeholder="50" step="0.01"></div>
+        <div><label>Cs (biaya server, opsional)</label><input type="number" id="c_server" placeholder="100" step="0.01"></div>
+      </div>
+      <button onclick="calculateQueue()">Hitung</button>
+    </div>
+
+    <div class="card result" id="resultCardQueue"><h2>📊 Hasil</h2><div id="resultContentQueue"></div></div>
+    <div class="card">
+      <h2>⚖️ Bandingkan Model</h2>
+      <button onclick="compareModels()">Bandingkan M/M/1 vs M/D/1 vs M/G/1</button>
+      <div id="compareContent"></div>
+    </div>
+  </div>
+
+  <!-- ============ TAB 2: TRANSPORTASI ============ -->
+  <div class="tab-content" id="tab-transport">
+    <div class="card">
+      <h2>📖 Apa Itu Teori Transportasi?</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda punya 3 gudang dan 3 toko.</b> Setiap gudang punya stok, setiap toko punya permintaan. Biaya kirim beda-beda. Bagaimana mengirim agar total biaya paling murah?</p>
+        <p>Aplikasi: distribusi barang, alokasi produksi, distribusi air, pengiriman paket.</p>
+      </div>
+      <div class="analogy"><b>Analogi:</b> 3 ember air, 3 gelas kosong, biaya jalan beda-beda. Isi ketiga gelas dengan total biaya minimum.</div>
+      <h3>🔑 Tiga Elemen</h3>
+      <div class="accordion"><div class="accordion-header">1. Supply (Sumber)</div><div class="accordion-body"><p>Kapasitas maksimum barang dari gudang S₁, S₂, dst.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Demand (Tujuan)</div><div class="accordion-body"><p>Permintaan di toko D₁, D₂, dst.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Biaya per Unit</div><div class="accordion-body"><p>c[i][j] = biaya kirim 1 unit dari sumber i ke tujuan j.</p></div></div>
+      <h3>⚖️ Seimbang vs Tidak</h3>
+      <div class="accordion"><div class="accordion-header">Seimbang (total supply = total demand)</div><div class="accordion-body"><p>Solusi langsung dihitung.</p></div></div>
+      <div class="accordion"><div class="accordion-header">Tidak Seimbang</div><div class="accordion-body"><p>Ditambah baris/kolom <b>dummy</b> dengan biaya 0 untuk menyeimbangkan.</p></div></div>
+      <h3>🎯 Tiga Metode</h3>
+      <div class="accordion"><div class="accordion-header">1. North-West Corner (NWC)</div><div class="accordion-body"><p>Mulai kiri atas, alokasikan, geser kanan/bawah. Mudah tapi belum tentu termurah.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Least Cost</div><div class="accordion-body"><p>Mulai dari biaya terkecil. Lebih murah dari NWC.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Vogel (VAM)</div><div class="accordion-body"><p>Hitung penalty tiap baris/kolom, pilih penalty terbesar. Hampir selalu optimal.</p></div></div>
+    </div>
+
+    <div class="card">
+      <h2>🚚 Kalkulator Transportasi</h2>
+      <div class="grid2">
+        <div><label>Jumlah Sumber</label><input type="number" id="t_sources" value="3" min="2" max="6" onchange="buildTransportMatrix()"></div>
+        <div><label>Jumlah Tujuan</label><input type="number" id="t_dest" value="3" min="2" max="6" onchange="buildTransportMatrix()"></div>
+      </div>
+      <label>Metode</label>
+      <select id="t_method">
+        <option value="nwc">North-West Corner</option>
+        <option value="least_cost">Least Cost</option>
+        <option value="vam">Vogel (VAM)</option>
+      </select>
+      <h3>Matriks Biaya</h3>
+      <div id="t_cost_matrix" class="matrix-input"></div>
+      <h3>Supply & Demand</h3>
+      <div id="t_supply_demand" class="matrix-input"></div>
+      <button onclick="calculateTransport()">Hitung</button>
+      <button class="btn-secondary" onclick="loadTransportExample()">Muat Contoh</button>
+    </div>
+
+    <div class="card result" id="resultCardTransport"><h2>📊 Hasil Transportasi</h2><div id="resultContentTransport"></div></div>
+  </div>
+
+  <!-- ============ TAB 3: PENUGASAN ============ -->
+  <div class="tab-content" id="tab-assignment">
+    <div class="card">
+      <h2>📖 Apa Itu Teori Penugasan?</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda punya 3 karyawan dan 3 tugas.</b> Setiap karyawan punya keahlian beda. Bagaimana menugaskan agar total biaya paling murah?</p>
+        <p>Aplikasi: salesman ke wilayah, mesin ke pekerjaan, dosen ke mata kuliah, supir ke rute.</p>
+      </div>
+      <div class="analogy"><b>Analogi:</b> 3 kunci, 3 pintu. Setiap kunci bisa buka pintu mana saja, tapi beda waktu. Pasangkan agar total waktu minimum.</div>
+      <h3>🔑 Karakteristik</h3>
+      <div class="accordion"><div class="accordion-header">1. Matriks Persegi</div><div class="accordion-body"><p>Jumlah pekerja = jumlah tugas. Jika tidak, tambahkan dummy.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. One-to-One</div><div class="accordion-body"><p>Satu pekerja = satu tugas. Tidak boleh dobel.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Minimasi Biaya</div><div class="accordion-body"><p>Cari pasangan termurah.</p></div></div>
+      <h3>🎯 Metode Hungarian</h3>
+      <div class="esai-box">
+        <p>Algoritma paling terkenal untuk penugasan optimal. Ditemukan Harold Kuhn (1955).</p>
+        <p><b>Ide:</b> jika kurangi konstanta dari baris/kolom, solusi optimal tidak berubah. Karena setiap pekerja pasti dapat 1 tugas, jadi pengurangan konstan tidak mengubah siapa dapat apa.</p>
+        <p><b>Langkah:</b> 1) kurangi minimum baris, 2) kurangi minimum kolom, 3) cari penugasan nol, 4) jika belum, tutup nol dengan garis minimum, 5) kurangi uncovered, tambah di intersection, ulangi.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>👷 Kalkulator Penugasan</h2>
+      <div class="grid2">
+        <div><label>Jumlah Pekerja = Tugas</label><input type="number" id="a_size" value="3" min="2" max="6" onchange="buildAssignmentMatrix()"></div>
+        <div></div>
+      </div>
+      <h3>Matriks Biaya</h3>
+      <div id="a_cost_matrix" class="matrix-input"></div>
+      <button onclick="calculateAssignment()">Hitung</button>
+      <button class="btn-secondary" onclick="loadAssignmentExample()">Muat Contoh</button>
+    </div>
+
+    <div class="card result" id="resultCardAssignment"><h2>📊 Hasil Penugasan</h2><div id="resultContentAssignment"></div></div>
+  </div>
+
+  <!-- ============ TAB 4: CPM ============ -->
+  <div class="tab-content" id="tab-cpm">
+    <div class="card">
+      <h2>📖 Apa Itu CPM (Critical Path Method)?</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda merencanakan proyek pernikahan.</b> Ada banyak tugas: pesan gedung, pesan katering, undang tamu, dekorasi, dll. Sebagian tugas harus selesai dulu sebelum tugas lain bisa dimulai (misal: dekorasi baru bisa setelah gedung dipesan). <b>Berapa lama total waktu proyek? Tugas mana yang paling menentukan?</b> Inilah yang dijawab CPM.</p>
+        <p><b>CPM (Critical Path Method)</b> adalah metode untuk merencanakan dan mengendalikan proyek dengan mengidentifikasi <b>jalur kritis</b> — rangkaian aktivitas yang jika salah satunya terlambat, seluruh proyek ikut terlambat. Dikembangkan oleh DuPont dan Remington Rand pada 1957 untuk proyek pemeliharaan pabrik kimia.</p>
+        <p>Cocok untuk proyek dengan <b>durasi aktivitas yang sudah pasti/ diketahui</b> (deterministik). Contoh: konstruksi bangunan, perakitan mesin, peluncuran produk.</p>
+      </div>
+      <div class="analogy"><b>Analogi:</b> Bayangkan Anda memasak nasi goreng. Ada tugas: cuci beras (2 menit), masak nasi (15 menit), potong sayur (5 menit), goreng (10 menit). Masak nasi dan potong sayur bisa bersamaan. Tapi goreng baru bisa setelah nasi & sayur siap. Jalur kritis = rangkaian tugas terpanjang yang menentukan total waktu.</div>
+
+      <h3>🔑 Konsep Kunci CPM</h3>
+      <div class="accordion"><div class="accordion-header">1. Aktivitas & Predecessor</div><div class="accordion-body"><p><b>Aktivitas</b> = tugas dalam proyek (A, B, C, ...). <b>Predecessor</b> = aktivitas yang harus selesai sebelum aktivitas ini bisa dimulai. Contoh: C predecessors = A, B artinya C baru bisa mulai setelah A dan B selesai.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. ES, EF, LS, LF</div><div class="accordion-body"><p><b>ES (Early Start)</b> = waktu paling awal aktivitas bisa dimulai. <b>EF (Early Finish)</b> = ES + durasi. <b>LS (Late Start)</b> = waktu paling lambat mulai agar proyek tidak terlambat. <b>LF (Late Finish)</b> = LS + durasi.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Slack (Kelonggaran)</div><div class="accordion-body"><p><b>Slack = LS − ES</b> (atau LF − EF). Menunjukkan berapa lama aktivitas bisa ditunda tanpa memperlambat proyek. Slack = 0 → aktivitas <b>kritis</b>.</p></div></div>
+      <div class="accordion"><div class="accordion-header">4. Jalur Kritis (Critical Path)</div><div class="accordion-body"><p>Rangkaian aktivitas dengan slack = 0. Ini adalah <b>jalur terpanjang</b> dalam jaringan proyek, dan menentukan durasi total proyek. Jika salah satu aktivitas di jalur ini terlambat, seluruh proyek terlambat.</p></div></div>
+
+      <h3>📐 Dua Pass CPM</h3>
+      <div class="formula">
+        Forward Pass: ES = max(EF predecessor), EF = ES + durasi<br>
+        Backward Pass: LF = min(LS successor), LS = LF - durasi<br>
+        Slack = LS - ES (atau LF - EF)<br>
+        Durasi proyek = max(EF semua aktivitas)
+      </div>
+
+      <h3>💡 Mengapa CPM Penting?</h3>
+      <div class="esai-box">
+        <p>CPM membantu manajer proyek:</p>
+        <ul>
+          <li>Mengetahui <b>total durasi minimum</b> proyek.</li>
+          <li>Mengidentifikasi aktivitas mana yang <b>tidak boleh terlambat</b> (jalur kritis).</li>
+          <li>Mengalokasikan sumber daya secara efisien — fokus pengawasan pada aktivitas kritis.</li>
+          <li>Menghemat biaya dengan menunda aktivitas non-kritis (crash vs normal cost).</li>
+        </ul>
+      </div>
+
+      <div class="warning-box"><b>💡 Cara Menggunakan:</b> Isi daftar aktivitas (ID, nama, durasi, predecessor). Klik "Hitung". Anda akan melihat ES, EF, LS, LF, slack, dan jalur kritis.</div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Kalkulator CPM</h2>
+      <p class="hint">Isi ID aktivitas (unik), nama (opsional), durasi, dan predecessor (pisahkan dengan koma). Contoh: A, B. Kosongkan jika tidak ada.</p>
+      <div id="cpm_activities"></div>
+      <button class="btn-secondary" onclick="addCpmActivity()">+ Tambah Aktivitas</button>
+      <button class="btn-secondary" onclick="loadCpmExample()">Muat Contoh</button>
+      <button onclick="calculateCpm()">Hitung CPM</button>
+    </div>
+
+    <div class="card result" id="resultCardCpm"><h2>📊 Hasil CPM</h2><div id="resultContentCpm"></div></div>
+  </div>
+
+  <!-- ============ TAB 5: PERT ============ -->
+  <div class="tab-content" id="tab-pert">
+    <div class="card">
+      <h2>📖 Apa Itu PERT (Program Evaluation and Review Technique)?</h2>
+      <div class="esai-box">
+        <p><b>Bayangkan Anda merencanakan proyek penelitian atau pengembangan produk baru.</b> Berbeda dengan konstruksi, durasi aktivitasnya <b>tidak pasti</b>. Anda hanya bisa menebak: optimis (jika lancar), realistis (biasanya), dan pesimis (jika banyak hambatan). <b>Berapa perkiraan waktu total? Seberapa besar ketidakpastiannya?</b> Inilah yang dijawab PERT.</p>
+        <p><b>PERT (Program Evaluation and Review Technique)</b> adalah metode manajemen proyek yang memperhitungkan <b>ketidakpastian durasi aktivitas</b>. Dikembangkan oleh Angkatan Laut AS pada 1958 untuk proyek rudal Polaris. Berbeda dengan CPM yang mengasumsikan durasi pasti, PERT menggunakan <b>tiga estimasi waktu</b> per aktivitas.</p>
+        <p>Cocok untuk proyek <b>R&D, inovasi, atau proyek dengan ketidakpastian tinggi</b> — di mana durasi aktivitas tidak bisa ditentukan dengan pasti.</p>
+      </div>
+      <div class="analogy"><b>Analogi:</b> Bayangkan Anda memperkirakan perjalanan ke kantor. Jika lancar (optimis) 30 menit, biasanya (realistis) 45 menit, jika macet parah (pesimis) 90 menit. Berapa rata-rata waktu? PERT membantu menghitungnya secara statistik, dengan mempertimbangkan kemungkinan macet.</div>
+
+      <h3>🔑 Konsep Kunci PERT</h3>
+      <div class="accordion"><div class="accordion-header">1. Tiga Estimasi Waktu</div><div class="accordion-body"><p><b>O (Optimistic)</b> = waktu jika semua lancar. <b>M (Most Likely)</b> = waktu paling mungkin. <b>P (Pessimistic)</b> = waktu jika banyak hambatan.</p></div></div>
+      <div class="accordion"><div class="accordion-header">2. Expected Duration (Te)</div><div class="accordion-body"><p><b>Te = (O + 4M + P) / 6</b>. Rumus ini memberi bobot lebih besar pada M (4×), karena M dianggap paling realistis. Disebut juga <b>beta distribution approximation</b>.</p></div></div>
+      <div class="accordion"><div class="accordion-header">3. Variance</div><div class="accordion-body"><p><b>σ² = ((P − O) / 6)²</b>. Mengukur ketidakpastian. Semakin besar P−O, semakin besar variance, semakin tidak pasti.</p></div></div>
+      <div class="accordion"><div class="accordion-header">4. Standar Deviasi Proyek</div><div class="accordion-body"><p>σ_proyek = √(Σ σ²_aktivitas kritis). Hanya aktivitas di jalur kritis yang berkontribusi pada ketidakpastian total.</p></div></div>
+      <div class="accordion"><div class="accordion-header">5. Probabilitas Selesai</div><div class="accordion-body"><p>Menggunakan distribusi normal: <b>Z = (Target − Durasi Proyek) / σ_proyek</b>. Lalu cari P(Z) dari tabel normal standar. Contoh: P(T ≤ 30) = peluang proyek selesai ≤ 30 satuan waktu.</p></div></div>
+
+      <h3>📐 Rumus PERT</h3>
+      <div class="formula">
+        Te = (O + 4M + P) / 6<br>
+        σ² = ((P − O) / 6)²<br>
+        σ_proyek = √(Σ σ²_kritis)<br>
+        Z = (Target − Durasi) / σ<br>
+        P(T ≤ Target) = Φ(Z) = 0.5 × (1 + erf(Z/√2))
+      </div>
+
+      <h3>💡 Perbandingan CPM vs PERT</h3>
+      <table>
+        <tr><th>Aspek</th><th>CPM</th><th>PERT</th></tr>
+        <tr><td>Durasi</td><td>Deterministik (pasti)</td><td>Probabilistik (3 estimasi)</td></tr>
+        <tr><td>Fokus</td><td>Biaya vs waktu</td><td>Ketidakpastian waktu</td></tr>
+        <tr><td>Asal</td><td>DuPont (1957)</td><td>US Navy (1958)</td></tr>
+        <tr><td>Cocok untuk</td><td>Konstruksi, manufaktur</td><td>R&D, inovasi</td></tr>
+        <tr><td>Kompleksitas</td><td>Lebih sederhana</td><td>Lebih kompleks</td></tr>
+      </table>
+
+      <div class="warning-box"><b>💡 Cara Menggunakan:</b> Isi daftar aktivitas dengan O, M, P, dan predecessor. Klik "Hitung". Isi target waktu (opsional) untuk melihat probabilitas selesai.</div>
+    </div>
+
+    <div class="card">
+      <h2>🎲 Kalkulator PERT</h2>
+      <p class="hint">Isi O (optimis), M (realistis), P (pesimis), dan predecessor. O ≤ M ≤ P.</p>
+      <div id="pert_activities"></div>
+      <button class="btn-secondary" onclick="addPertActivity()">+ Tambah Aktivitas</button>
+      <button class="btn-secondary" onclick="loadPertExample()">Muat Contoh</button>
+      <div style="margin-top:12px">
+        <label>Target Waktu (opsional, untuk hitung probabilitas)</label>
+        <input type="number" id="pert_target" placeholder="misal: 30" step="0.01">
+      </div>
+      <button onclick="calculatePert()">Hitung PERT</button>
+    </div>
+
+    <div class="card result" id="resultCardPert"><h2>📊 Hasil PERT</h2><div id="resultContentPert"></div></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="card" style="text-align:center; font-size:0.82rem; color:#666;">
+    <p>📚 Dibuat untuk pembelajaran Operation Research</p>
+    <p style="margin-top:6px;">Antrean · Transportasi · Penugasan · CPM · PERT</p>
+  </div>
+</div>
+
+<script>
+// ============ TAB SWITCHING ============
+function switchTab(name, evt) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (evt) evt.target.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ============ ACCORDION ============
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('accordion-header')) {
+    e.target.parentElement.classList.toggle('open');
+  }
+});
+
+// ============ ANTREAN ============
+function updateFields() {
+  const model = document.getElementById('model').value;
+  const extra = document.getElementById('extraFields');
+  if (model === 'mmc') extra.innerHTML = '<label>c — jumlah server</label><input type="number" id="c" value="2" min="1" step="1">';
+  else if (model === 'mm1k') extra.innerHTML = '<label>K — kapasitas</label><input type="number" id="K" value="5" min="1" step="1">';
+  else if (model === 'mg1') extra.innerHTML = '<label>σ — std dev layanan</label><input type="number" id="sigma" value="0.1" step="0.01" min="0">';
+  else extra.innerHTML = '';
+}
+updateFields();
+
+async function calculateQueue() {
+  const body = { model: document.getElementById('model').value,
+                 lam: document.getElementById('lam').value,
+                 mu: document.getElementById('mu').value };
+  const c = document.getElementById('c'); if (c) body.c = c.value;
+  const K = document.getElementById('K'); if (K) body.K = K.value;
+  const sigma = document.getElementById('sigma'); if (sigma) body.sigma = sigma.value;
+  const cw = document.getElementById('c_wait').value; if (cw) body.c_wait = cw;
+  const cs = document.getElementById('c_server').value; if (cs) body.c_server = cs;
+  const res = await fetch('/api/calculate', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}).then(r => r.json());
+  const card = document.getElementById('resultCardQueue'); const out = document.getElementById('resultContentQueue');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">' + res.model + '</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<h3>Angka Hasil</h3><div class="metrics">' +
+    '<div class="metric"><div class="label">ρ</div><div class="value">' + res.rho.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">P₀</div><div class="value">' + res.P0.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">L</div><div class="value">' + res.L.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">Lq</div><div class="value">' + res.Lq.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">W</div><div class="value">' + res.W.toFixed(4) + '</div></div>' +
+    '<div class="metric"><div class="label">Wq</div><div class="value">' + res.Wq.toFixed(4) + '</div></div></div>';
+  if (res.P_wait !== undefined) html += '<div class="info-box"><b>Peluang menunggu:</b> ' + (res.P_wait*100).toFixed(2) + '%</div>';
+  if (res.P_block !== undefined) html += '<div class="warning-box"><b>Peluang blocking:</b> ' + (res.P_block*100).toFixed(2) + '%</div>';
+  if (res.detail) { html += '<h3>Detail</h3><ul class="detail-list">';
+    for (const [k, v] of Object.entries(res.detail)) html += '<li><span>' + k + '</span><b>' + (typeof v === 'number' ? v.toFixed(4) : v) + '</b></li>';
+    html += '</ul>'; }
+  if (res.cost) { html += '<h3>💰 Biaya</h3><div class="metrics">' +
+    '<div class="metric"><div class="label">Biaya Tunggu</div><div class="value">' + res.cost.waiting_cost.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Biaya Server</div><div class="value">' + res.cost.server_cost.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Total</div><div class="value">' + res.cost.total_cost.toFixed(2) + '</div></div></div>'; }
+  out.innerHTML = html;
+}
+
+async function compareModels() {
+  const body = { lam: document.getElementById('lam').value, mu: document.getElementById('mu').value };
+  const sigma = document.getElementById('sigma'); if (sigma) body.sigma = sigma.value;
+  const res = await fetch('/api/compare', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}).then(r => r.json());
+  const out = document.getElementById('compareContent');
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<table><tr><th>Model</th><th>ρ</th><th>Lq</th><th>Wq</th><th>W</th></tr>';
+  res.rows.forEach(r => html += '<tr><td><b>' + r.model + '</b></td><td>' + r.rho.toFixed(4) + '</td><td>' + r.Lq.toFixed(4) + '</td><td>' + r.Wq.toFixed(4) + '</td><td>' + r.W.toFixed(4) + '</td></tr>');
+  html += '</table><div class="info-box" style="margin-top:10px"><b>💡 Interpretasi:</b> M/D/1 selalu Lq lebih kecil dari M/M/1 karena waktu layanan konstan mengurangi ketidakpastian.</div>';
+  out.innerHTML = html;
+}
+
+// ============ TRANSPORTASI ============
+function buildTransportMatrix() {
+  const ns = parseInt(document.getElementById('t_sources').value) || 3;
+  const nd = parseInt(document.getElementById('t_dest').value) || 3;
+  let html = '<div style="display:grid;grid-template-columns: 40px repeat(' + nd + ', 1fr);gap:5px;">';
+  html += '<div></div>';
+  for (let j = 0; j < nd; j++) html += '<div class="row-label">T' + (j+1) + '</div>';
+  for (let i = 0; i < ns; i++) {
+    html += '<div class="row-label">S' + (i+1) + '</div>';
+    for (let j = 0; j < nd; j++) html += '<input type="number" id="tc_' + i + '_' + j + '" value="0" step="1">';
+  }
+  html += '</div>';
+  document.getElementById('t_cost_matrix').innerHTML = html;
+  let html2 = '<div style="display:grid;grid-template-columns: repeat(' + (nd + 1) + ', 1fr);gap:5px;">';
+  for (let i = 0; i < ns; i++) html2 += '<div><label>Supply S' + (i+1) + '</label><input type="number" id="ts_' + i + '" value="0" step="1"></div>';
+  html2 += '<div></div>';
+  for (let j = 0; j < nd; j++) html2 += '<div><label>Demand T' + (j+1) + '</label><input type="number" id="td_' + j + '" value="0" step="1"></div>';
+  html2 += '</div>';
+  document.getElementById('t_supply_demand').innerHTML = html2;
+}
+
+function loadTransportExample() {
+  document.getElementById('t_sources').value = 3;
+  document.getElementById('t_dest').value = 3;
+  buildTransportMatrix();
+  const cost = [[4,8,8],[16,24,16],[8,16,24]];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) document.getElementById('tc_'+i+'_'+j).value = cost[i][j];
+  [50,60,30].forEach((v,i) => document.getElementById('ts_'+i).value = v);
+  [40,60,40].forEach((v,j) => document.getElementById('td_'+j).value = v);
+}
+
+async function calculateTransport() {
+  const ns = parseInt(document.getElementById('t_sources').value);
+  const nd = parseInt(document.getElementById('t_dest').value);
+  const cost = [];
+  for (let i = 0; i < ns; i++) { const row = []; for (let j = 0; j < nd; j++) row.push(parseFloat(document.getElementById('tc_'+i+'_'+j).value) || 0); cost.push(row); }
+  const supply = []; for (let i = 0; i < ns; i++) supply.push(parseFloat(document.getElementById('ts_'+i).value) || 0);
+  const demand = []; for (let j = 0; j < nd; j++) demand.push(parseFloat(document.getElementById('td_'+j).value) || 0);
+  const metode = document.getElementById('t_method').value;
+  const res = await fetch('/api/transport', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cost, supply, demand, metode})}).then(r => r.json());
+  const card = document.getElementById('resultCardTransport'); const out = document.getElementById('resultContentTransport');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">' + res.metode + '</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  if (!res.balanced) html += '<div class="warning-box"><b>⚠️ Tidak seimbang:</b> supply=' + res.total_supply + ', demand=' + res.total_demand + '. Ditambah dummy.</div>';
+  else html += '<div class="info-box">✅ Seimbang: supply = demand = ' + res.total_supply + '</div>';
+  html += '<h3>📋 Matriks Alokasi</h3><table><tr><th>S\\T</th>';
+  for (let j = 0; j < res.allocation[0].length; j++) html += '<th>T' + (j+1) + '</th>';
+  html += '<th>Supply</th></tr>';
+  for (let i = 0; i < res.allocation.length; i++) {
+    html += '<tr><td><b>S' + (i+1) + '</b></td>';
+    for (let j = 0; j < res.allocation[i].length; j++) {
+      const val = res.allocation[i][j];
+      html += '<td class="' + (val > 0 ? 'highlight' : '') + '">' + val + '</td>';
+    }
+    html += '<td>' + res.supply_used[i] + '</td></tr>';
+  }
+  html += '<tr><td><b>Demand</b></td>';
+  for (let j = 0; j < res.demand_used.length; j++) html += '<td>' + res.demand_used[j] + '</td>';
+  html += '<td></td></tr></table>';
+  html += '<h3>💰 Rincian</h3><ul class="detail-list">';
+  res.rincian.forEach(r => html += '<li><span>' + r.from + '→' + r.to + ' (' + r.qty + '×' + r.cost + ')</span><b>= ' + r.subtotal.toFixed(2) + '</b></li>');
+  html += '</ul>';
+  html += '<div class="metric" style="margin-top:10px"><div class="label">Total Biaya</div><div class="value">' + res.total_cost.toFixed(2) + '</div></div>';
+  html += res.optimal ? '<div class="success-box" style="margin-top:10px">✅ Optimal (uji MODI)</div>' : '<div class="warning-box" style="margin-top:10px">⚠️ Belum tentu optimal. Gunakan MODI untuk perbaikan.</div>';
+  out.innerHTML = html;
+}
+
+// ============ PENUGASAN ============
+function buildAssignmentMatrix() {
+  const n = parseInt(document.getElementById('a_size').value) || 3;
+  let html = '<div style="display:grid;grid-template-columns: 40px repeat(' + n + ', 1fr);gap:5px;">';
+  html += '<div></div>';
+  for (let j = 0; j < n; j++) html += '<div class="row-label">T' + (j+1) + '</div>';
+  for (let i = 0; i < n; i++) {
+    html += '<div class="row-label">P' + (i+1) + '</div>';
+    for (let j = 0; j < n; j++) html += '<input type="number" id="ac_' + i + '_' + j + '" value="0" step="1">';
+  }
+  html += '</div>';
+  document.getElementById('a_cost_matrix').innerHTML = html;
+}
+
+function loadAssignmentExample() {
+  document.getElementById('a_size').value = 3;
+  buildAssignmentMatrix();
+  const cost = [[8,4,6],[6,5,9],[5,7,4]];
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) document.getElementById('ac_'+i+'_'+j).value = cost[i][j];
+}
+
+async function calculateAssignment() {
+  const n = parseInt(document.getElementById('a_size').value);
+  const cost = [];
+  for (let i = 0; i < n; i++) { const row = []; for (let j = 0; j < n; j++) row.push(parseFloat(document.getElementById('ac_'+i+'_'+j).value) || 0); cost.push(row); }
+  const res = await fetch('/api/assignment', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cost})}).then(r => r.json());
+  const card = document.getElementById('resultCardAssignment'); const out = document.getElementById('resultContentAssignment');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">Hungarian Method</span>';
+  if (res.interpretasi) html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<h3>🎯 Pasangan Optimal</h3><table><tr><th>Pekerja</th><th>Tugas</th><th>Biaya</th></tr>';
+  res.assignment.forEach(a => html += '<tr><td><b>' + a.worker + '</b></td><td>' + a.task + '</td><td>' + a.cost.toFixed(2) + '</td></tr>');
+  html += '</table>';
+  html += '<div class="metric" style="margin-top:10px"><div class="label">Total Biaya</div><div class="value">' + res.total_cost.toFixed(2) + '</div></div>';
+  html += '<h3>🔍 Langkah Hungarian</h3>';
+  res.steps.forEach(s => {
+    html += '<div style="margin-bottom:10px"><b style="font-size:0.85rem">' + s.step + '</b>';
+    if (s.matrix) {
+      html += '<table style="margin-top:4px"><tr><th></th>';
+      for (let j = 0; j < s.matrix[0].length; j++) html += '<th>T' + (j+1) + '</th>';
+      html += '</tr>';
+      s.matrix.forEach((row, i) => { html += '<tr><th>P' + (i+1) + '</th>'; row.forEach(v => html += '<td>' + v + '</td>'); html += '</tr>'; });
+      html += '</table>';
+    }
+    html += '</div>';
+  });
+  out.innerHTML = html;
+}
+
+// ============ CPM ============
+let cpmCount = 0;
+function addCpmActivity(data) {
+  cpmCount++;
+  const id = 'cpm_act_' + cpmCount;
+  const actId = (data && data.id) || String.fromCharCode(64 + cpmCount);
+  const name = (data && data.name) || '';
+  const dur = (data && data.duration) || 1;
+  const preds = (data && data.predecessors) ? data.predecessors.join(', ') : '';
+  const html = '<div class="activity-card" id="' + id + '">' +
+    '<div class="header"><b>Aktivitas ' + actId + '</b><button class="btn-small" onclick="document.getElementById(\'' + id + '\').remove()">Hapus</button></div>' +
+    '<div class="grid3">' +
+    '<div><label>ID</label><input type="text" class="cpm-id" value="' + actId + '"></div>' +
+    '<div><label>Durasi</label><input type="number" class="cpm-dur" value="' + dur + '" step="0.01" min="0"></div>' +
+    '<div><label>Nama (opsional)</label><input type="text" class="cpm-name" value="' + name + '"></div>' +
+    '</div>' +
+    '<label>Predecessor (pisah koma)</label><input type="text" class="cpm-pred" value="' + preds + '" placeholder="misal: A, B">' +
+    '</div>';
+  document.getElementById('cpm_activities').insertAdjacentHTML('beforeend', html);
+}
+
+function loadCpmExample() {
+  document.getElementById('cpm_activities').innerHTML = '';
+  cpmCount = 0;
+  const example = [
+    {id: 'A', name: 'Persiapan', duration: 2, predecessors: []},
+    {id: 'B', name: 'Galian', duration: 4, predecessors: ['A']},
+    {id: 'C', name: 'Pondasi', duration: 6, predecessors: ['B']},
+    {id: 'D', name: 'Struktur', duration: 8, predecessors: ['C']},
+    {id: 'E', name: 'Atap', duration: 3, predecessors: ['D']},
+    {id: 'F', name: 'Finishing', duration: 2, predecessors: ['E']},
+  ];
+  example.forEach(a => addCpmActivity(a));
+}
+
+async function calculateCpm() {
+  const cards = document.querySelectorAll('#cpm_activities .activity-card');
+  const activities = [];
+  cards.forEach(c => {
+    const id = c.querySelector('.cpm-id').value.trim();
+    const name = c.querySelector('.cpm-name').value.trim();
+    const dur = parseFloat(c.querySelector('.cpm-dur').value) || 0;
+    const predStr = c.querySelector('.cpm-pred').value;
+    const preds = predStr.split(',').map(s => s.trim()).filter(s => s);
+    if (id) activities.push({id, name: name || id, duration: dur, predecessors: preds});
+  });
+  if (!activities.length) { alert('Tambahkan minimal 1 aktivitas.'); return; }
+  const res = await fetch('/api/cpm', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({activities})}).then(r => r.json());
+  const card = document.getElementById('resultCardCpm'); const out = document.getElementById('resultContentCpm');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">CPM</span>';
+  html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<div class="metrics">' +
+    '<div class="metric"><div class="label">Durasi Proyek</div><div class="value">' + res.project_duration.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Jumlah Aktivitas Kritis</div><div class="value">' + res.critical_path.length + '</div></div>' +
+    '</div>';
+  html += '<h3>📋 Tabel Aktivitas</h3><table><tr><th>ID</th><th>Durasi</th><th>Pred</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Slack</th><th>Kritis?</th></tr>';
+  res.activities.forEach(a => {
+    html += '<tr class="' + (a.critical ? 'critical-row' : '') + '"><td><b>' + a.id + '</b></td><td>' + a.duration + '</td><td>' + (a.predecessors.join(',') || '-') + '</td><td>' + a.ES.toFixed(2) + '</td><td>' + a.EF.toFixed(2) + '</td><td>' + a.LS.toFixed(2) + '</td><td>' + a.LF.toFixed(2) + '</td><td>' + a.slack.toFixed(2) + '</td><td>' + (a.critical ? '✅' : '❌') + '</td></tr>';
+  });
+  html += '</table>';
+  html += '<h3>🎯 Jalur Kritis</h3><div class="formula">' + res.critical_path.join(' → ') + '</div>';
+  html += '<h3>🔍 Langkah-Langkah</h3><ol class="steps-list">';
+  res.steps.forEach(s => html += '<li><b>' + s.step + '</b><br><span style="color:#666">' + s.detail + '</span></li>');
+  html += '</ol>';
+  out.innerHTML = html;
+}
+
+// ============ PERT ============
+let pertCount = 0;
+function addPertActivity(data) {
+  pertCount++;
+  const id = 'pert_act_' + pertCount;
+  const actId = (data && data.id) || String.fromCharCode(64 + pertCount);
+  const name = (data && data.name) || '';
+  const O = (data && data.optimistic) || 1;
+  const M = (data && data.most_likely) || 2;
+  const P = (data && data.pessimistic) || 3;
+  const preds = (data && data.predecessors) ? data.predecessors.join(', ') : '';
+  const html = '<div class="activity-card" id="' + id + '">' +
+    '<div class="header"><b>Aktivitas ' + actId + '</b><button class="btn-small" onclick="document.getElementById(\'' + id + '\').remove()">Hapus</button></div>' +
+    '<div class="grid3">' +
+    '<div><label>ID</label><input type="text" class="pert-id" value="' + actId + '"></div>' +
+    '<div><label>Nama</label><input type="text" class="pert-name" value="' + name + '"></div>' +
+    '<div><label>Predecessor</label><input type="text" class="pert-pred" value="' + preds + '" placeholder="A, B"></div>' +
+    '</div>' +
+    '<div class="grid3">' +
+    '<div><label>O (optimis)</label><input type="number" class="pert-O" value="' + O + '" step="0.01" min="0"></div>' +
+    '<div><label>M (realistis)</label><input type="number" class="pert-M" value="' + M + '" step="0.01" min="0"></div>' +
+    '<div><label>P (pesimis)</label><input type="number" class="pert-P" value="' + P + '" step="0.01" min="0"></div>' +
+    '</div>' +
+    '</div>';
+  document.getElementById('pert_activities').insertAdjacentHTML('beforeend', html);
+}
+
+function loadPertExample() {
+  document.getElementById('pert_activities').innerHTML = '';
+  pertCount = 0;
+  const example = [
+    {id: 'A', name: 'Riset', optimistic: 2, most_likely: 4, pessimistic: 6, predecessors: []},
+    {id: 'B', name: 'Prototipe', optimistic: 3, most_likely: 5, pessimistic: 9, predecessors: ['A']},
+    {id: 'C', name: 'Uji Coba', optimistic: 2, most_likely: 4, pessimistic: 8, predecessors: ['B']},
+    {id: 'D', name: 'Produksi', optimistic: 1, most_likely: 2, pessimistic: 3, predecessors: ['C']},
+    {id: 'E', name: 'Peluncuran', optimistic: 1, most_likely: 1, pessimistic: 2, predecessors: ['D']},
+  ];
+  example.forEach(a => addPertActivity(a));
+}
+
+async function calculatePert() {
+  const cards = document.querySelectorAll('#pert_activities .activity-card');
+  const activities = [];
+  cards.forEach(c => {
+    const id = c.querySelector('.pert-id').value.trim();
+    const name = c.querySelector('.pert-name').value.trim();
+    const O = parseFloat(c.querySelector('.pert-O').value);
+    const M = parseFloat(c.querySelector('.pert-M').value);
+    const P = parseFloat(c.querySelector('.pert-P').value);
+    const predStr = c.querySelector('.pert-pred').value;
+    const preds = predStr.split(',').map(s => s.trim()).filter(s => s);
+    if (id) activities.push({id, name: name || id, optimistic: O, most_likely: M, pessimistic: P, predecessors: preds});
+  });
+  if (!activities.length) { alert('Tambahkan minimal 1 aktivitas.'); return; }
+  const target = document.getElementById('pert_target').value;
+  const res = await fetch('/api/pert', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({activities, target: target || null})}).then(r => r.json());
+  const card = document.getElementById('resultCardPert'); const out = document.getElementById('resultContentPert');
+  card.classList.add('show'); card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  if (res.error) { out.innerHTML = '<div class="error">⚠️ ' + res.error + '</div>'; return; }
+  let html = '<span class="badge">PERT</span>';
+  html += '<div class="success-box"><b>💬 Penjelasan:</b><br>' + res.interpretasi + '</div>';
+  html += '<div class="metrics">' +
+    '<div class="metric"><div class="label">Durasi Proyek (rata-rata)</div><div class="value">' + res.project_duration.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Std Deviasi</div><div class="value">' + res.project_std.toFixed(2) + '</div></div>' +
+    '<div class="metric"><div class="label">Variance</div><div class="value">' + res.project_variance.toFixed(2) + '</div></div>' +
+    '</div>';
+  if (res.probability !== undefined && res.probability) {
+    const p = res.probability;
+    html += '<div class="info-box"><b>🎯 Probabilitas Selesai ≤ Target (' + res.target + '):</b> ' + (p.prob * 100).toFixed(2) + '%<br>Z = (' + res.target + ' - ' + res.project_duration.toFixed(2) + ') / ' + res.project_std.toFixed(2) + ' = ' + p.z.toFixed(4) + '</div>';
+  }
+  html += '<h3>📋 Tabel Aktivitas</h3><table><tr><th>ID</th><th>O</th><th>M</th><th>P</th><th>Te</th><th>Var</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Slack</th><th>Kritis?</th></tr>';
+  res.activities.forEach(a => {
+    html += '<tr class="' + (a.critical ? 'critical-row' : '') + '"><td><b>' + a.id + '</b></td><td>' + a.O + '</td><td>' + a.M + '</td><td>' + a.P + '</td><td>' + a.expected.toFixed(3) + '</td><td>' + a.variance.toFixed(3) + '</td><td>' + a.ES.toFixed(2) + '</td><td>' + a.EF.toFixed(2) + '</td><td>' + a.LS.toFixed(2) + '</td><td>' + a.LF.toFixed(2) + '</td><td>' + a.slack.toFixed(2) + '</td><td>' + (a.critical ? '✅' : '❌') + '</td></tr>';
+  });
+  html += '</table>';
+  html += '<h3>🎯 Jalur Kritis</h3><div class="formula">' + res.critical_path.join(' → ') + '</div>';
+  html += '<h3>🔍 Langkah-Langkah</h3><ol class="steps-list">';
+  res.steps.forEach(s => html += '<li><b>' + s.step + '</b><br><span style="color:#666">' + s.detail + '</span></li>');
+  html += '</ol>';
+  out.innerHTML = html;
+}
+
+// Initialize
+buildTransportMatrix();
+buildAssignmentMatrix();
+loadCpmExample();
+loadPertExample();
+</script>
+</body>
+</html>
